@@ -19,7 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
 interface FormData {
-  componentName: string;
+  componentName: string; // Now expects format like "Section: Hero" or "Page: Contact"
   htmlCode: string;
   destinationPage: string;
   insertionPosition: string;
@@ -64,9 +64,10 @@ const PromptForgePage: FC = () => {
       .map((line) => ` * ${line}`)
       .join('\n');
 
-    const prompt = `Por favor, integra el siguiente componente HTML en el archivo ${destinationPage || '[Nombre de la Página de Destino]'}.
+    // Update prompt template to reflect the change in componentName input
+    const prompt = `Por favor, integra el siguiente elemento en el archivo ${destinationPage || '[Nombre de la Página de Destino]'}.
 
-**Nombre del Componente:** ${componentName || '[Nombre de la Sección/Componente]'}
+**Tipo y Nombre:** ${componentName || '[Tipo: Nombre Específico]'}
 
 **Código HTML a Integrar:**
 \`\`\`html
@@ -77,11 +78,11 @@ ${htmlCode || '[Pega aquí el código HTML ingresado por el usuario]'}
 ${insertionPosition || '[Describe aquí la Posición en la Página ingresada por el usuario. Sé lo más específico posible, mencionando selectores CSS, IDs o la relación con elementos existentes.]'}
 
 **Instrucciones de Estilo:**
-Aplica estilos a este componente utilizando las clases disponibles en nuestro CSS global y nuestra configuración de Tailwind CSS (tailwind.config.ts).
+Aplica estilos a este elemento utilizando las clases disponibles en nuestro CSS global y nuestra configuración de Tailwind CSS (tailwind.config.ts).
 Por favor, sigue estas instrucciones específicas para el estilo:
 ${formattedStyleInstructions || ' * [Instrucción de Estilo Específica 1, ingresada por el usuario]'}
 
-Asegúrate de que el componente se vea coherente con el diseño existente de la página y que sea responsivo.
+Asegúrate de que el elemento se vea coherente con el diseño existente de la página y que sea responsivo.
 `;
 
     setGeneratedPrompt(prompt);
@@ -133,11 +134,13 @@ Asegúrate de que el componente se vea coherente con el diseño existente de la 
           </CardHeader>
           <CardContent className="flex-grow space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="componentName">Component Name</Label>
+              {/* Updated Label */}
+              <Label htmlFor="componentName">Tipo (Sección/Componente/Página) y Nombre Específico</Label>
               <Input
                 id="componentName"
                 name="componentName"
-                placeholder="e.g., Hero Section with Button"
+                // Updated Placeholder
+                placeholder="e.g., Sección: Hero con Botón / Página: Contacto"
                 value={formData.componentName}
                 onChange={handleInputChange}
               />
