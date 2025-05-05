@@ -15,11 +15,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'; // Import Select components
 import { useToast } from '@/hooks/use-toast';
 
+// Updated FormData interface
 interface FormData {
-  componentName: string; // Now expects format like "Section: Hero" or "Page: Contact"
+  componentType: 'Sección' | 'Componente' | 'Página' | ''; // Added componentType
+  componentSpecificName: string; // Added componentSpecificName
   htmlCode: string;
   destinationPage: string;
   insertionPosition: string;
@@ -28,7 +36,8 @@ interface FormData {
 
 const PromptForgePage: FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    componentName: '',
+    componentType: '', // Initialize componentType
+    componentSpecificName: '', // Initialize componentSpecificName
     htmlCode: '',
     destinationPage: '',
     insertionPosition: '',
@@ -47,14 +56,26 @@ const PromptForgePage: FC = () => {
     []
   );
 
+  // Handler for Select component change
+  const handleSelectChange = useCallback((value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      componentType: value as FormData['componentType'],
+    }));
+  }, []);
+
   const generatePrompt = useCallback(() => {
     const {
-      componentName,
+      componentType, // Use componentType
+      componentSpecificName, // Use componentSpecificName
       htmlCode,
       destinationPage,
       insertionPosition,
       styleInstructions,
     } = formData;
+
+    // Combine type and name for the prompt
+    const componentFullName = `${componentType || '[Tipo]'}: ${componentSpecificName || '[Nombre Específico]'}`;
 
     // Split style instructions into bullet points
     const formattedStyleInstructions = styleInstructions
@@ -64,10 +85,10 @@ const PromptForgePage: FC = () => {
       .map((line) => ` * ${line}`)
       .join('\n');
 
-    // Update prompt template to reflect the change in componentName input
+    // Updated prompt template
     const prompt = `Por favor, integra el siguiente elemento en el archivo ${destinationPage || '[Nombre de la Página de Destino]'}.
 
-**Tipo y Nombre:** ${componentName || '[Tipo: Nombre Específico]'}
+**Tipo y Nombre:** ${componentFullName}
 
 **Código HTML a Integrar:**
 \`\`\`html
@@ -133,18 +154,37 @@ Asegúrate de que el elemento se vea coherente con el diseño existente de la p�
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow space-y-4">
+            {/* Select for Component Type */}
             <div className="space-y-2">
-              {/* Updated Label */}
-              <Label htmlFor="componentName">Tipo (Sección/Componente/Página) y Nombre Específico</Label>
+              <Label htmlFor="componentType">Tipo</Label>
+              <Select
+                name="componentType"
+                value={formData.componentType}
+                onValueChange={handleSelectChange}
+              >
+                <SelectTrigger id="componentType" aria-label="Selecciona el tipo de componente">
+                  <SelectValue placeholder="Selecciona Sección, Componente o Página" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sección">Sección</SelectItem>
+                  <SelectItem value="Componente">Componente</SelectItem>
+                  <SelectItem value="Página">Página</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Input for Specific Name */}
+            <div className="space-y-2">
+              <Label htmlFor="componentSpecificName">Nombre Específico</Label>
               <Input
-                id="componentName"
-                name="componentName"
-                // Updated Placeholder
-                placeholder="e.g., Sección: Hero con Botón / Página: Contacto"
-                value={formData.componentName}
+                id="componentSpecificName"
+                name="componentSpecificName"
+                placeholder="e.g., Hero con Botón, Formulario de Contacto"
+                value={formData.componentSpecificName}
                 onChange={handleInputChange}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="htmlCode">HTML Code</Label>
               <Textarea
