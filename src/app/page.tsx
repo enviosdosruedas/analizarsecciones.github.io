@@ -115,7 +115,7 @@ Asegúrate de que el componente se vea coherente con el diseño existente de la 
   }, [generatedPrompt, toast]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 min-h-screen flex flex-col">
+    <div className="container mx-auto p-4 md:p-8 flex flex-col"> {/* Removed min-h-screen */}
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">PromptForge</h1>
         <p className="text-muted-foreground">
