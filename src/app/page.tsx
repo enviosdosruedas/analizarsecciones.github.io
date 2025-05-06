@@ -28,29 +28,22 @@ interface FormData {
   componentType: 'Sección' | 'Componente' | 'Página' | '';
   componentSpecificName: string;
   htmlCode: string;
-  destinationPage: string;
+  destinationPage: string; // Will now hold a directory path
   insertionPosition: string;
 }
 
-// Helper function to recursively extract page paths
-const extractPaths = (obj: any, currentPath: string): string[] => {
-  let paths: string[] = [];
-  if (!obj || typeof obj !== 'object') return paths;
-
-  for (const key in obj) {
-    // Ensure we don't process prototype properties
-    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
-
-    const newPath = currentPath ? `${currentPath}/${key}` : key;
-    // Check if the key is 'page.tsx' and its value is null (as per the structure file format)
-    if (key === 'page.tsx' && obj[key] === null) {
-      paths.push(newPath);
-    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-      // Recursively check sub-objects/directories
-      paths = paths.concat(extractPaths(obj[key], newPath));
-    }
+// Helper function to extract top-level directories under src/
+const extractSrcDirectories = (structure: any): string[] => {
+  if (!structure?.src || typeof structure.src !== 'object') {
+    return [];
   }
-  return paths;
+  const srcDirs = Object.keys(structure.src).filter(key => {
+      // Ensure the value associated with the key is an object (representing a directory)
+      // and it's not a hidden file/dir like .DS_Store
+      return typeof structure.src[key] === 'object' && structure.src[key] !== null && !key.startsWith('.');
+  });
+  // Prepend 'src/' to each directory name and sort
+  return srcDirs.map(dir => `src/${dir}`).sort();
 };
 
 
@@ -63,7 +56,7 @@ const PromptForgePage: FC = () => {
     insertionPosition: '',
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-  const [pagePaths, setPagePaths] = useState<string[]>([]); // State for page paths
+  const [directoryPaths, setDirectoryPaths] = useState<string[]>([]); // State for directory paths
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state
   const { toast } = useToast();
 
@@ -78,26 +71,26 @@ const PromptForgePage: FC = () => {
         }
         const structure = await response.json();
 
-        if (structure?.src?.app) {
-          const extracted = extractPaths(structure.src.app, 'src/app');
-          // Sort paths alphabetically for better UX
-          extracted.sort();
-          setPagePaths(extracted);
+        // Use the new extraction function for directories
+        const extractedDirs = extractSrcDirectories(structure);
+
+        if (extractedDirs.length > 0) {
+          setDirectoryPaths(extractedDirs);
         } else {
-          console.error("Invalid structure format in estructura_proyecto.json");
-          setPagePaths([]);
+          console.warn("Could not find directories under src in estructura_proyecto.json");
+          setDirectoryPaths([]);
           toast({
             title: 'Warning',
-            description: 'Could not find valid page structure in estructura_proyecto.json.',
+            description: 'Could not find project directories in estructura_proyecto.json.',
             variant: 'destructive', // Use destructive variant for warnings/errors
           });
         }
       } catch (error) {
         console.error("Failed to fetch or process project structure:", error);
-        setPagePaths([]); // Set to empty array on error
+        setDirectoryPaths([]); // Set to empty array on error
         toast({
           title: 'Error',
-          description: 'Failed to load page structure. Please check console.',
+          description: 'Failed to load project directories. Please check console.',
           variant: 'destructive',
         });
       } finally {
@@ -130,11 +123,11 @@ const PromptForgePage: FC = () => {
     }));
   }, []);
 
-  // Handler for Destination Page Select change
+  // Handler for Destination Page Select change (now Destination Directory)
    const handleDestinationPageChange = useCallback((value: string) => {
      setFormData((prev) => ({
        ...prev,
-       destinationPage: value,
+       destinationPage: value, // Stores the selected directory path
      }));
    }, []);
 
@@ -144,9 +137,17 @@ const PromptForgePage: FC = () => {
       componentType,
       componentSpecificName,
       htmlCode,
-      destinationPage,
+      destinationPage, // This now contains the selected directory
       insertionPosition,
     } = formData;
+
+    // **IMPORTANT**: The prompt generation logic needs adjustment.
+    // It currently assumes destinationPage is a file path.
+    // We need to decide how to use the selected directory.
+    // Option 1: Ask the user for a filename within that directory in another field.
+    // Option 2: Let the AI decide the filename based on componentSpecificName.
+    // Option 3: Modify the prompt to instruct the AI *where* to create/modify files *based on* the selected directory.
+    // For now, we'll keep the prompt generation as is, but highlight this needed change.
 
     const prompt = `INICIO DEL PROMPT PARA IA
 
@@ -169,15 +170,15 @@ Alias de directorios (aliases del snippet components.json): Utiliza estos alias 
 /home/user/studio/public/estructura_proyecto.json:
 
 Uso: Este archivo representa el mapa del proyecto. Debes consultarlo para:
-Validar la ruta del "Archivo/Página de Destino" proporcionada.
-Identificar la estructura de directorios existente para decidir la ubicación lógica de nuevos archivos (ej: si el tipo es "Componente" o "Sección", busca directorios como src/components/sections/ o src/components/ui/).
+Validar la ruta del "Directorio de Destino" proporcionada.
+Identificar la estructura de directorios existente para decidir la ubicación lógica de nuevos archivos (ej: si el tipo es "Componente" o "Sección" y el directorio es "src/components", el nuevo archivo podría ser "src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx").
 Confirmar la existencia de archivos y directorios necesarios.
 Especificaciones del Elemento a Integrar (Datos del Usuario):
 
 Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
 Nombre Específico: ${componentSpecificName || '[Por favor, introduce un nombre específico]'}
-Archivo/Página de Destino: ${destinationPage || '[Por favor, selecciona una página de destino]'}
-Ubicación de Inserción: En el archivo ${destinationPage || '[Nombre del Archivo/Página de Destino]'}, localiza y realiza la inserción en el siguiente punto específico: ${insertionPosition || '[Por favor, describe la ubicación de inserción]'}
+Directorio de Destino: ${destinationPage || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio base para la integración. La IA determinará el archivo específico dentro de este directorio).
+Ubicación de Inserción (si aplica a un archivo existente dentro del directorio): En el archivo relevante dentro de "${destinationPage || '[Directorio de Destino]'}", localiza y realiza la inserción en el siguiente punto específico: ${insertionPosition || '[Por favor, describe la ubicación de inserción, o indica "Nuevo archivo"]'}
 Código HTML Base del Elemento:
 
 \`\`\`html
@@ -197,19 +198,20 @@ Sea completamente responsivo y se adapte correctamente a diferentes tamaños de 
 PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
 
 1.  Análisis de Contexto: Lee y procesa a fondo \`/home/user/studio/public/configuracion_proyecto.txt\` y \`/home/user/studio/public/estructura_proyecto.json\` para tener clara la configuración de estilos (Tailwind, CSS global, variables) y la estructura de archivos (rutas, directorios de componentes/páginas).
-2.  Preparación de Archivos:
-    *   Si el "Tipo de Elemento" es "Componente" o "Sección" y el archivo de destino es .tsx (como es típico en este proyecto Next.js), DEBES crear un nuevo archivo .tsx para el componente/sección. Nómbralo de forma descriptiva usando el "Nombre Específico" (ej: src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx) y utiliza la estructura de carpetas de estructura_proyecto.json como guía.
-    *   Si el "Tipo de Elemento" es "Página", el archivo a modificar/crear es directamente el "Archivo/Página de Destino" especificado.
-    *   Si solo se modifica un archivo existente (no se crea un nuevo componente/página separado), abre el "Archivo/Página de Destino".
+2.  Determinación de Archivo(s):
+    *   Basado en el "Tipo de Elemento" y el "Directorio de Destino", determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\` o \`src/app/nueva-pagina/page.tsx\`).
+    *   Si el "Tipo de Elemento" es "Componente" o "Sección", DEBES crear un nuevo archivo .tsx dentro del "Directorio de Destino" o un subdirectorio apropiado (usa el "Nombre Específico" para nombrar el archivo).
+    *   Si el "Tipo de Elemento" es "Página", determina la ruta del archivo \`page.tsx\` dentro del "Directorio de Destino" (puede requerir crear subdirectorios si la página es nueva).
+    *   Si la "Ubicación de Inserción" indica una modificación en un archivo existente, identifica ese archivo dentro del "Directorio de Destino".
 3.  Implementación del Código y Estilos (Modificación/Creación):
     *   Toma el "Código HTML Base".
     *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto obtenido de los archivos de configuración (\`/home/user/studio/public/configuracion_proyecto.txt\`). Asegura que la responsividad se implemente en este paso.**
-    *   Si creaste un nuevo archivo .tsx para un componente/sección, coloca el código implementado con estilos dentro de la estructura de un componente React funcional.
-    *   Si el "Tipo de Elemento" es "Página", coloca el código implementado en el archivo de destino (el nuevo o el existente).
-4.  Integración en el Archivo de Destino:
-    *   Si creaste un nuevo archivo de componente/sección (.tsx), DEBES añadir una sentencia \`import\` para este nuevo componente en la parte superior del "Archivo/Página de Destino" (utiliza los alias definidos, ej: \`import ${componentSpecificName || 'MyComponent'} from '@/components/sections/${componentSpecificName || 'MyComponent'}';\`).
-    *   DEBES insertar el código del elemento (si modificaste el archivo directamente) o la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la "Ubicación de Inserción" especificada dentro del "Archivo/Página de Destino".
-5.  Verificación y Limpieza: Revisa el archivo modificado/creado para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
+    *   Escribe el contenido completo del nuevo archivo .tsx (si aplica) o modifica el archivo existente.
+4.  Integración (si se creó un nuevo componente/sección):
+    *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante (generalmente una página) donde este componente debe ser utilizado (puede ser inferido del contexto o requerir una clarificación adicional si la "Ubicación de Inserción" no es clara).
+    *   Añade la sentencia \`import\` para el nuevo componente en la parte superior de ese archivo de destino (usa alias, ej: \`import ${componentSpecificName || 'MyComponent'} from '@/components/sections/${componentSpecificName || 'MyComponent'}';\`).
+    *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la "Ubicación de Inserción" especificada dentro de ese archivo de destino.
+5.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
 6.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
 
 FIN DEL PROMPT`;
@@ -307,41 +309,47 @@ FIN DEL PROMPT`;
               />
             </div>
 
-            {/* Select for Destination Page */}
+            {/* Select for Destination Directory */}
             <div className="space-y-2">
-              <Label htmlFor="destinationPage">Destination Page</Label>
+              <Label htmlFor="destinationPage">Directorio de Destino</Label> {/* Updated Label */}
               <Select
-                name="destinationPage"
+                name="destinationPage" // Keep name for consistency, but it represents directory
                 value={formData.destinationPage}
                 onValueChange={handleDestinationPageChange} // Use specific handler
                 disabled={isLoadingPaths} // Disable while loading
               >
-                <SelectTrigger id="destinationPage" aria-label="Select destination page">
-                  <SelectValue placeholder={isLoadingPaths ? "Loading pages..." : "Select a page..."} />
+                <SelectTrigger id="destinationPage" aria-label="Select destination directory">
+                  <SelectValue placeholder={isLoadingPaths ? "Loading directories..." : "Select a directory..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {!isLoadingPaths && pagePaths.length > 0 ? (
-                    pagePaths.map((path) => (
+                  {!isLoadingPaths && directoryPaths.length > 0 ? (
+                    directoryPaths.map((path) => (
                       <SelectItem key={path} value={path}>
                         {path}
                       </SelectItem>
                     ))
                   ) : !isLoadingPaths ? (
-                    <SelectItem value="no-pages" disabled>No pages found</SelectItem>
+                    <SelectItem value="no-dirs" disabled>No directories found</SelectItem>
                   ) : null /* Render nothing while loading */}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground pt-1">
+                Select the base directory for the component/page. The AI will determine the specific file.
+              </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="insertionPosition">Insertion Position</Label>
+              <Label htmlFor="insertionPosition">Insertion Position / Target</Label> {/* Clarified Label */}
               <Input
                 id="insertionPosition"
                 name="insertionPosition"
-                placeholder="e.g., Antes del <footer>, dentro de #main-content"
+                placeholder='e.g., Antes del <footer> en page.tsx, o "Nuevo archivo"'
                 value={formData.insertionPosition}
                 onChange={handleInputChange}
               />
+               <p className="text-xs text-muted-foreground pt-1">
+                Describe where to insert in an existing file within the selected directory, or type "Nuevo archivo" if creating one.
+              </p>
             </div>
             {/* Removed Styling Instructions Label and Textarea */}
           </CardContent>
@@ -390,4 +398,3 @@ FIN DEL PROMPT`;
 };
 
 export default PromptForgePage;
-
