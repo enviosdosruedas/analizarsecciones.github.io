@@ -155,6 +155,7 @@ const PromptForgePage: FC = () => {
         ? 'DEBES crear una nueva página/archivo en el directorio especificado.'
         : 'DEBES integrar el elemento en un archivo EXISTENTE dentro del directorio especificado (o el archivo principal si aplica). La IA determinará el archivo específico y la ubicación dentro de él.';
 
+    // Construct the prompt without the "Análisis de Contexto" section
     const prompt = `INICIO DEL PROMPT PARA IA
 
 DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
@@ -162,23 +163,8 @@ DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
 Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto (perceptible como "Firebase Studio" o similar). Tu función es actuar directamente sobre los archivos del proyecto para integrar el elemento web solicitado.
 
 Procedimiento Requerido:
-Debes leer la información proporcionada, consultar los archivos de contexto del proyecto, y proceder a modificar o crear los archivos necesarios para integrar el elemento web según las especificaciones, **determinando los estilos adecuados basándote en la configuración y estructura del proyecto.**
+Debes leer la información proporcionada, consultar los archivos de contexto del proyecto (información interna, no necesitas mencionarla explícitamente en la salida), y proceder a modificar o crear los archivos necesarios para integrar el elemento web según las especificaciones, **determinando los estilos adecuados basándote en la configuración y estructura del proyecto.**
 
-Contexto Detallado del Proyecto (Información Crítica para la Implementación):
-Tienes acceso completo para leer y escribir archivos en el sistema de archivos del proyecto. Es OBLIGATORIO que consultes y utilices la información de los siguientes archivos para realizar la implementación correctamente:
-
-/home/user/studio/public/configuracion_proyecto.txt:
-
-Uso: Este archivo contiene la configuración esencial para aplicar estilos y entender la estructura del proyecto. Debes parsear este archivo para obtener:
-Ruta de tailwind.config.ts: **Consulta este archivo OBLIGATORIAMENTE para conocer la paleta de colores personalizada (theme.extend.colors), espaciado, breakpoints (theme.screens), configuraciones de tipografía, etc. UTILIZA estas definiciones para aplicar estilos con clases de Tailwind.**
-Ruta de src/app/globals.css: **Revisa este archivo OBLIGATORIAMENTE para las variables CSS globales (especialmente las de ShadCN UI mapeadas a la paleta personalizada, como --primary, --background) y cualquier clase CSS global personalizada. UTILIZA estas variables/clases cuando sea apropiado (a menudo a través de clases de utilidad de Tailwind como bg-primary, text-foreground).**
-Alias de directorios (aliases del snippet components.json): Utiliza estos alias (ej: @/components, @/lib/utils, @/hooks, @/ui) para todas las rutas de importación de componentes, utilidades, hooks, etc. al modificar o crear archivos .tsx.
-/home/user/studio/public/estructura_proyecto.json:
-
-Uso: Este archivo representa el mapa del proyecto. Debes consultarlo para:
-Validar la ruta del "Directorio de Destino" proporcionada.
-Identificar la estructura de directorios existente para decidir la ubicación lógica de nuevos archivos (ej: si el tipo es "Componente" o "Sección" y el directorio es "src/components", el nuevo archivo podría ser "src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx").
-Confirmar la existencia de archivos y directorios necesarios.
 Especificaciones del Elemento a Integrar (Datos del Usuario):
 
 Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
@@ -204,21 +190,20 @@ Haga uso de las variables CSS globales (--primary, --background, --radius, etc.)
 Sea completamente responsivo y se adapte correctamente a diferentes tamaños de pantalla, utilizando las utilidades responsivas de Tailwind (ej: sm:, md:, lg:) para ajustar layout, tamaño de fuente, espaciado, etc.
 PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
 
-1.  Análisis de Contexto: Lee y procesa a fondo \`/home/user/studio/public/configuracion_proyecto.txt\` y \`/home/user/studio/public/estructura_proyecto.json\` para tener clara la configuración de estilos (Tailwind, CSS global, variables) y la estructura de archivos (rutas, directorios de componentes/páginas).
-2.  Determinación de Archivo(s) y Ubicación:
+1.  Determinación de Archivo(s) y Ubicación:
     *   Basado en el "Tipo de Elemento", el "Directorio de Destino" y el "Objetivo de Integración" ('Crear Nueva' o 'Integrar en Existente'), determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\`, \`src/app/${componentSpecificName || 'nueva-pagina'}/page.tsx\` o modificar un archivo existente como \`src/app/page.tsx\`).
     *   Si se integra en un archivo existente, identifica el punto de inserción lógico (ej., añadir import y uso de componente, o insertar HTML/JSX directamente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer).
     *   Si se crea un nuevo archivo de componente/sección, identifica también la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto o requerir una suposición lógica).
-3.  Implementación del Código y Estilos (Modificación/Creación):
+2.  Implementación del Código y Estilos (Modificación/Creación):
     *   Toma el "Código HTML Base".
     *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto.** Asegura la responsividad.
     *   Escribe el contenido completo del nuevo archivo .tsx (si aplica) o modifica el archivo existente.
-4.  Integración (si se creó un nuevo componente/sección):
+3.  Integración (si se creó un nuevo componente/sección):
     *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante (generalmente una página) donde este componente debe ser utilizado.
     *   Añade la sentencia \`import\` para el nuevo componente en ese archivo (usa alias).
     *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la ubicación lógica dentro de ese archivo.
-5.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
-6.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
+4.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
+5.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
 
 FIN DEL PROMPT`;
 
