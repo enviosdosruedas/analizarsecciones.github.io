@@ -22,15 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Import RadioGroup
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox'; // Import Combobox
 import { useToast } from '@/hooks/use-toast';
 
 interface FormData {
   componentType: 'Sección' | 'Componente' | 'Página' | '';
   componentSpecificName: string;
   htmlCode: string;
-  destinationDirectory: string; // Renamed from destinationPage
-  integrationTarget: 'existing' | 'new' | ''; // Added for integration choice
+  destinationDirectory: string;
+  integrationTarget: string; // Changed to string for Combobox value
 }
 
 // Helper function to extract top-level directories under src/
@@ -39,12 +39,33 @@ const extractSrcDirectories = (structure: any): string[] => {
     return [];
   }
   const srcDirs = Object.keys(structure.src).filter(key => {
-      // Ensure the value associated with the key is an object (representing a directory)
-      // and it's not a hidden file/dir like .DS_Store
       return typeof structure.src[key] === 'object' && structure.src[key] !== null && !key.startsWith('.');
   });
-  // Prepend 'src/' to each directory name and sort
   return srcDirs.map(dir => `src/${dir}`).sort();
+};
+
+// Helper function to extract all file paths from the project structure recursively
+const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
+  if (typeof structure !== 'object' || structure === null) {
+    return allPaths;
+  }
+
+  Object.keys(structure).forEach(key => {
+    const newPath = currentPath ? `${currentPath}/${key}` : key;
+    const value = structure[key];
+
+    if (typeof value === 'object' && value !== null) {
+      // It's a directory, recurse
+      extractAllFilePaths(value, newPath, allPaths);
+    } else {
+      // It's a file, add its path if it looks like a potential target (e.g., .tsx, .js)
+      if (/\.(tsx|jsx|js|html|css)$/.test(key) && !key.startsWith('.')) { // Filter for relevant file types
+        allPaths.push({ value: newPath, label: newPath });
+      }
+    }
+  });
+
+  return allPaths;
 };
 
 
@@ -58,6 +79,7 @@ const PromptForgePage: FC = () => {
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
   const [directoryPaths, setDirectoryPaths] = useState<string[]>([]); // State for directory paths
+  const [filePaths, setFilePaths] = useState<ComboboxOption[]>([{ value: 'new', label: 'Crear Nueva Página/Archivo' }]); // State for file paths, including 'new' option
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state
   const { toast } = useToast();
 
@@ -83,15 +105,25 @@ const PromptForgePage: FC = () => {
           toast({
             title: 'Warning',
             description: 'Could not find project directories in estructura_proyecto.json.',
-            variant: 'destructive', // Use destructive variant for warnings/errors
+            variant: 'destructive',
           });
         }
+
+        // Extract all file paths
+        const extractedFiles = extractAllFilePaths(structure);
+        // Combine 'new' option with extracted file paths, sorted
+        setFilePaths(
+            [{ value: 'new', label: 'Crear Nueva Página/Archivo' }, ...extractedFiles].sort((a, b) => a.label.localeCompare(b.label))
+        );
+
+
       } catch (error) {
         console.error("Failed to fetch or process project structure:", error);
         setDirectoryPaths([]); // Set to empty array on error
+        setFilePaths([{ value: 'new', label: 'Crear Nueva Página/Archivo' }]); // Reset file paths with 'new' option
         toast({
           title: 'Error',
-          description: 'Failed to load project directories. Please check console.',
+          description: 'Failed to load project structure. Please check console.',
           variant: 'destructive',
         });
       } finally {
@@ -108,8 +140,7 @@ const PromptForgePage: FC = () => {
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
       const { name, value } = e.target;
-       // Only update if it's not the destinationDirectory (handled by Select)
-       if (name !== 'destinationDirectory') {
+       if (name !== 'destinationDirectory' && name !== 'integrationTarget') { // Also exclude integrationTarget
            setFormData((prev) => ({ ...prev, [name]: value }));
        }
     },
@@ -132,11 +163,11 @@ const PromptForgePage: FC = () => {
      }));
    }, []);
 
-  // Handler for Integration Target RadioGroup change
+  // Handler for Integration Target Combobox change
   const handleIntegrationTargetChange = useCallback((value: string) => {
       setFormData((prev) => ({
         ...prev,
-        integrationTarget: value as FormData['integrationTarget'],
+        integrationTarget: value,
       }));
   }, []);
 
@@ -146,14 +177,25 @@ const PromptForgePage: FC = () => {
       componentType,
       componentSpecificName,
       htmlCode,
-      destinationDirectory, // This now contains the selected directory
-      integrationTarget, // New field value
+      destinationDirectory,
+      integrationTarget,
     } = formData;
 
-    // Determine integration action based on user choice
-    const integrationActionText = integrationTarget === 'new'
-        ? 'DEBES crear una nueva página/archivo en el directorio especificado.'
-        : 'DEBES integrar el elemento en un archivo EXISTENTE dentro del directorio especificado (o el archivo principal si aplica). La IA determinará el archivo específico y la ubicación dentro de él.';
+    // Determine integration action and target file description based on user choice
+    let integrationActionText = '';
+    let targetDescription = '';
+
+    if (integrationTarget === 'new') {
+      integrationActionText = 'DEBES crear una nueva página/archivo en el directorio especificado.';
+      targetDescription = 'Crear Nueva Página/Archivo';
+    } else if (integrationTarget) {
+      integrationActionText = `DEBES integrar el elemento en el archivo EXISTENTE: ${integrationTarget}. La IA determinará la ubicación específica dentro de él.`;
+      targetDescription = `Integrar en Existente: ${integrationTarget}`;
+    } else {
+        integrationActionText = '[Error: Selecciona un objetivo de integración]';
+        targetDescription = '[Por favor, selecciona un objetivo]';
+    }
+
 
     // Construct the prompt without the "Análisis de Contexto" section
     const prompt = `INICIO DEL PROMPT PARA IA
@@ -169,9 +211,9 @@ Especificaciones del Elemento a Integrar (Datos del Usuario):
 
 Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
 Nombre Específico: ${componentSpecificName || '[Por favor, introduce un nombre específico]'}
-Objetivo de Integración: ${integrationTarget === 'new' ? 'Crear Nueva Página/Archivo' : integrationTarget === 'existing' ? 'Integrar en Página/Archivo Existente' : '[Por favor, selecciona un objetivo]'}
-Directorio de Destino: ${destinationDirectory || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio base para la integración).
-Acción de Integración Requerida: ${integrationActionText || '[Error: Selecciona un objetivo de integración]'}
+Directorio de Destino Base: ${destinationDirectory || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio general donde la acción tendrá lugar, relevante si se crea un archivo nuevo).
+Objetivo de Integración: ${targetDescription}
+Acción de Integración Requerida: ${integrationActionText}
 Código HTML Base del Elemento:
 
 \`\`\`html
@@ -191,15 +233,15 @@ Sea completamente responsivo y se adapte correctamente a diferentes tamaños de 
 PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
 
 1.  Determinación de Archivo(s) y Ubicación:
-    *   Basado en el "Tipo de Elemento", el "Directorio de Destino" y el "Objetivo de Integración" ('Crear Nueva' o 'Integrar en Existente'), determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\`, \`src/app/${componentSpecificName || 'nueva-pagina'}/page.tsx\` o modificar un archivo existente como \`src/app/page.tsx\`).
-    *   Si se integra en un archivo existente, identifica el punto de inserción lógico (ej., añadir import y uso de componente, o insertar HTML/JSX directamente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer).
-    *   Si se crea un nuevo archivo de componente/sección, identifica también la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto o requerir una suposición lógica).
+    *   Basado en el "Tipo de Elemento", el "Directorio de Destino Base", y el "Objetivo de Integración", determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\`, \`src/app/${componentSpecificName || 'nueva-pagina'}/page.tsx\`, o modificar el archivo existente \`${integrationTarget}\`).
+    *   Si se integra en un archivo existente (\`${integrationTarget}\`), identifica el punto de inserción lógico (ej., añadir import y uso de componente, o insertar HTML/JSX directamente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer).
+    *   Si se crea un nuevo archivo de componente/sección, identifica también la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto o requerir una suposición lógica, a menudo será el archivo especificado si 'integrar en existente' fue la lógica implícita antes).
 2.  Implementación del Código y Estilos (Modificación/Creación):
     *   Toma el "Código HTML Base".
     *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto.** Asegura la responsividad.
     *   Escribe el contenido completo del nuevo archivo .tsx (si aplica) o modifica el archivo existente.
 3.  Integración (si se creó un nuevo componente/sección):
-    *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante (generalmente una página) donde este componente debe ser utilizado.
+    *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante donde este componente debe ser utilizado (será \`${integrationTarget}\` si se especificó un archivo existente, o una página inferida si se eligió 'Crear Nueva').
     *   Añade la sentencia \`import\` para el nuevo componente en ese archivo (usa alias).
     *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la ubicación lógica dentro de ese archivo.
 4.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
@@ -239,7 +281,7 @@ FIN DEL PROMPT`;
   }, [generatedPrompt, toast]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 flex flex-col"> {/* Removed min-h-screen */}
+    <div className="container mx-auto p-4 md:p-8 flex flex-col">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">PromptForge</h1>
         <p className="text-muted-foreground">
@@ -262,7 +304,7 @@ FIN DEL PROMPT`;
               <Select
                 name="componentType"
                 value={formData.componentType}
-                onValueChange={handleComponentTypeChange} // Use specific handler
+                onValueChange={handleComponentTypeChange}
               >
                 <SelectTrigger id="componentType" aria-label="Selecciona el tipo de componente">
                   <SelectValue placeholder="Selecciona Sección, Componente o Página" />
@@ -302,15 +344,15 @@ FIN DEL PROMPT`;
 
             {/* Select for Destination Directory */}
             <div className="space-y-2">
-              <Label htmlFor="destinationDirectory">Directorio de Destino</Label> {/* Updated Label */}
+              <Label htmlFor="destinationDirectory">Directorio de Destino Base</Label> {/* Updated Label */}
               <Select
-                name="destinationDirectory" // Updated name
+                name="destinationDirectory"
                 value={formData.destinationDirectory}
-                onValueChange={handleDestinationDirectoryChange} // Use specific handler
-                disabled={isLoadingPaths} // Disable while loading
+                onValueChange={handleDestinationDirectoryChange}
+                disabled={isLoadingPaths}
               >
-                <SelectTrigger id="destinationDirectory" aria-label="Select destination directory"> {/* Updated id */}
-                  <SelectValue placeholder={isLoadingPaths ? "Loading directories..." : "Select a directory..."} />
+                <SelectTrigger id="destinationDirectory" aria-label="Select base destination directory"> {/* Updated id */}
+                  <SelectValue placeholder={isLoadingPaths ? "Loading directories..." : "Select a base directory..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {!isLoadingPaths && directoryPaths.length > 0 ? (
@@ -321,35 +363,30 @@ FIN DEL PROMPT`;
                     ))
                   ) : !isLoadingPaths ? (
                     <SelectItem value="no-dirs" disabled>No directories found</SelectItem>
-                  ) : null /* Render nothing while loading */}
+                  ) : null}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground pt-1">
-                Select the base directory for the component/page.
+                Select the base directory for the component/page. Relevant if creating a new file.
               </p>
             </div>
 
-             {/* RadioGroup for Integration Target */}
+             {/* Combobox for Integration Target */}
             <div className="space-y-2">
                 <Label htmlFor="integrationTarget">Objetivo de Integración</Label>
-                <RadioGroup
-                id="integrationTarget"
-                name="integrationTarget"
-                value={formData.integrationTarget}
-                onValueChange={handleIntegrationTargetChange}
-                className="flex space-x-4" // Arrange options horizontally
-                >
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="existing" id="existing" />
-                    <Label htmlFor="existing">Integrar en Existente</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="new" id="new" />
-                    <Label htmlFor="new">Crear Nueva Página/Archivo</Label>
-                </div>
-                </RadioGroup>
+                <Combobox
+                    options={filePaths}
+                    value={formData.integrationTarget}
+                    onChange={handleIntegrationTargetChange}
+                    placeholder={isLoadingPaths ? "Loading files..." : "Select target file or create new..."}
+                    searchPlaceholder="Search file or select 'Create New'..."
+                    emptyPlaceholder="No matching file found."
+                    disabled={isLoadingPaths}
+                    triggerClassName="w-full" // Ensure button takes full width
+                    contentClassName="w-[--radix-popover-trigger-width]" // Match trigger width
+                 />
                 <p className="text-xs text-muted-foreground pt-1">
-                Choose whether to add to an existing file or create a new one. The AI will determine the specific file/location.
+                    Search for an existing file to integrate into, or select 'Crear Nueva Página/Archivo'.
                 </p>
             </div>
 
