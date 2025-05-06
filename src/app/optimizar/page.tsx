@@ -25,30 +25,27 @@ import {
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 
-// Interface and helper functions copied from src/app/page.tsx
+// --- UPDATED FormData interface for Optimization ---
 interface FormData {
-  componentType: 'Sección' | 'Componente' | 'Página' | '';
-  componentSpecificName: string;
-  htmlCode: string;
-  destinationDirectory: string;
-  integrationTarget: string;
+  targetFile: string; // The file to optimize/modify
+  modificationType: 'Optimizar Código' | 'Optimizar Estilo' | 'Añadir CSS Específico' | 'Añadir Importación' | 'Añadir Dependencia/Plugin' | ''; // Type of modification
+  specificInstructions: string; // Details for the modification
+  // Removed fields related to new component creation (componentType, componentSpecificName, htmlCode, destinationDirectory, integrationTarget)
 }
 
-const extractSrcDirectories = (structure: any): string[] => {
-  if (!structure?.src || typeof structure.src !== 'object') {
-    return [];
-  }
-  // Using Object.entries and filter to avoid potential prototype pollution issues
-  // and correctly handle nested structures if the schema changes.
-  const srcEntries = Object.entries(structure.src);
-  const srcDirs = srcEntries
-    .filter(([key, value]) => typeof value === 'object' && value !== null && !key.startsWith('.'))
-    .map(([key]) => `src/${key}`); // Map to full path starting with 'src/'
-
-  return srcDirs.sort(); // Sort alphabetically
+// Mapping for dynamic placeholders
+const instructionPlaceholders: Record<FormData['modificationType'], string> = {
+    '': 'Selecciona un tipo de modificación para ver ejemplos...',
+    'Optimizar Código': "Ej:\n- Refactorizar la función 'fetchData' para usar async/await.\n- Simplificar la lógica condicional en el componente X.\n- Eliminar console.log innecesarios.",
+    'Optimizar Estilo': "Ej:\n- Reemplazar márgenes fijos con utilidades de Tailwind (p.ej., m-4, p-2).\n- Asegurar consistencia en el uso de colores primarios (bg-primary, text-primary).\n- Mejorar la responsividad en pantallas 'md' para la tabla de datos.",
+    'Añadir CSS Específico': "Ej:\n- Añadir en src/app/globals.css:\n.mi-clase-especial {\n  @apply text-accent font-semibold;\n}\n- Modificar la regla '.card-title' en globals.css para aumentar el tamaño de fuente.",
+    'Añadir Importación': "Ej:\n- Añadir `import { useState, useEffect } from 'react';` al inicio del archivo.\n- Importar `import { Card } from '@/components/ui/card';` donde se necesite.",
+    'Añadir Dependencia/Plugin': "Ej:\n- Añadir `axios` a package.json: `npm install axios`.\n- Instalar y configurar `react-hook-form` siguiendo su documentación.",
 };
 
 
+// Helper functions to extract file paths from project structure recursively
+// These are still needed to populate the targetFile Combobox
 const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
   if (typeof structure !== 'object' || structure === null) {
     return allPaths;
@@ -67,8 +64,8 @@ const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths:
       // It's a directory, recurse
       extractAllFilePaths(value, newPath, allPaths);
     } else {
-      // It's a file, add its path if it looks like a potential target
-      if (/\.(tsx|jsx|js|html|css)$/.test(key) && !key.startsWith('.')) {
+      // It's a file, add its path if it looks like a potential target (e.g., .tsx, .js, .css, .json)
+      if (/\.(tsx|jsx|js|html|css|json|ts)$/.test(key) && !key.startsWith('.')) { // Added .ts, .json as potential targets
         // Ensure no duplicate paths are added
         if (!allPaths.some(p => p.value === newPath)) {
             allPaths.push({ value: newPath, label: newPath });
@@ -77,31 +74,26 @@ const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths:
     }
   });
 
-  // Sort paths alphabetically by label after processing all keys at the current level
-  // Note: Sorting might be more efficient if done once after the entire recursion finishes.
-  // However, sorting here ensures order within each directory level's processing.
-  // For the final sorted list, sort outside the recursive calls or at the very end.
-  return allPaths; // The final sorting happens in the useEffect hook.
+  // The final sorting happens in the useEffect hook.
+  return allPaths;
 };
 
 
-// New Page Component for /optimizar
+// New Page Component for /optimizar with Optimization Logic
 const OptimizarPage: FC = () => {
-  // State and hooks copied from src/app/page.tsx
+  // --- UPDATED State for Optimization Form ---
   const [formData, setFormData] = useState<FormData>({
-    componentType: '',
-    componentSpecificName: '',
-    htmlCode: '',
-    destinationDirectory: '',
-    integrationTarget: '',
+    targetFile: '',
+    modificationType: '',
+    specificInstructions: '',
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-  const [directoryPaths, setDirectoryPaths] = useState<string[]>([]);
-  const [filePaths, setFilePaths] = useState<ComboboxOption[]>([{ value: 'new', label: 'Crear Nueva Página/Archivo' }]);
-  const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true);
+  const [filePaths, setFilePaths] = useState<ComboboxOption[]>([]); // State for file paths (target files)
+  const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state for file paths
   const { toast } = useToast();
 
-  // useEffect hook copied from src/app/page.tsx
+  // Fetch and process project structure on component mount
+  // This is needed to populate the list of files that can be optimized/modified
   useEffect(() => {
     const fetchAndProcessStructure = async () => {
       setIsLoadingPaths(true);
@@ -112,29 +104,18 @@ const OptimizarPage: FC = () => {
         }
         const structure = await response.json();
 
-        const extractedDirs = extractSrcDirectories(structure);
-        if (extractedDirs.length > 0) {
-          setDirectoryPaths(extractedDirs);
-        } else {
-          console.warn("Could not find directories under src in estructura_proyecto.json for OptimizarPage");
-          setDirectoryPaths([]);
-          // Optionally inform user if needed, but might be noisy
-        }
-
         let extractedFiles = extractAllFilePaths(structure);
         // Sort file paths alphabetically AFTER extraction is complete
         extractedFiles.sort((a, b) => a.label.localeCompare(b.label));
 
-        // Combine 'new' option with sorted extracted file paths
-        setFilePaths([{ value: 'new', label: 'Crear Nueva Página/Archivo' }, ...extractedFiles]);
+        setFilePaths(extractedFiles);
 
       } catch (error) {
         console.error("Failed to fetch or process project structure for OptimizarPage:", error);
-        setDirectoryPaths([]);
-        setFilePaths([{ value: 'new', label: 'Crear Nueva Página/Archivo' }]);
+        setFilePaths([]); // Set to empty array on error
         toast({
           title: 'Error',
-          description: 'Failed to load project structure. Please check console.',
+          description: 'Failed to load project structure for optimization targets. Please check console.',
           variant: 'destructive',
         });
       } finally {
@@ -143,109 +124,102 @@ const OptimizarPage: FC = () => {
     };
 
     fetchAndProcessStructure();
-  }, [toast]);
+  }, [toast]); // Add toast to dependency array
 
-  // Input handlers copied from src/app/page.tsx
+
+  // --- UPDATED Input Handlers for Optimization Form ---
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
-      // Exclude select/combobox handled separately
-      if (name !== 'componentType' && name !== 'destinationDirectory' && name !== 'integrationTarget') {
-        setFormData((prev) => ({ ...prev, [name]: value }));
+      // Handle only the specificInstructions textarea
+      if (name === 'specificInstructions') {
+         setFormData((prev) => ({ ...prev, [name]: value }));
       }
     },
     []
   );
 
-  const handleComponentTypeChange = useCallback((value: string) => {
+  // Handler for Target File Combobox change
+  const handleTargetFileChange = useCallback((value: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        targetFile: value,
+      }));
+  }, []);
+
+  // Handler for Modification Type Select change
+  const handleModificationTypeChange = useCallback((value: FormData['modificationType']) => {
     setFormData((prev) => ({
       ...prev,
-      componentType: value as FormData['componentType'],
+      modificationType: value,
+      // Optionally clear specific instructions when type changes
+      // specificInstructions: '',
     }));
   }, []);
 
-  const handleDestinationDirectoryChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, destinationDirectory: value }));
-  }, []);
 
-  const handleIntegrationTargetChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, integrationTarget: value }));
-  }, []);
-
-  // generatePrompt function copied and adapted from src/app/page.tsx
+  // --- UPDATED generatePrompt function to create Optimization Prompt ---
   const generatePrompt = useCallback(() => {
     const {
-      componentType,
-      componentSpecificName,
-      htmlCode,
-      destinationDirectory,
-      integrationTarget,
+      targetFile,
+      modificationType,
+      specificInstructions,
     } = formData;
 
-    let integrationActionText = '';
-    let targetDescription = '';
-    if (integrationTarget === 'new') {
-      integrationActionText = 'DEBES crear una nueva página/archivo en el directorio especificado.';
-      targetDescription = 'Crear Nueva Página/Archivo';
-    } else if (integrationTarget) {
-      integrationActionText = `DEBES integrar el elemento en el archivo EXISTENTE: ${integrationTarget}. La IA determinará la ubicación específica dentro de él.`;
-      targetDescription = `Integrar en Existente: ${integrationTarget}`;
-    } else {
-      integrationActionText = '[Error: Selecciona un objetivo de integración]';
-      targetDescription = '[Por favor, selecciona un objetivo]';
-    }
+    // Format specific instructions as bullet points if provided
+    const formattedSpecificInstructions = specificInstructions
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line) => ` * ${line}`)
+      .join('\n');
 
-    // Prompt structure copied from src/app/page.tsx
+    // --- Optimization Prompt Template (based on user's provided structure) ---
     const prompt = `INICIO DEL PROMPT PARA IA
 
-DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
+DIRECTIVA DE ACCIÓN INMEDIATA: OPTIMIZAR O MODIFICAR CÓDIGO EXISTENTE
 
-Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto (perceptible como "Firebase Studio" o similar). Tu función es actuar directamente sobre los archivos del proyecto para integrar el elemento web solicitado.
+Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto (perceptible como "Firebase Studio" o similar). Tu función es actuar directamente sobre los archivos del proyecto para optimizar o modificar un elemento web existente (Componente, Sección o Página) según las especificaciones proporcionadas.
 
 Procedimiento Requerido:
-Debes leer la información proporcionada, consultar los archivos de contexto del proyecto (información interna, no necesitas mencionarla explícitamente en la salida), y proceder a modificar o crear los archivos necesarios para integrar el elemento web según las especificaciones, **determinando los estilos adecuados basándote en la configuración y estructura del proyecto.**
+Debes leer la información proporcionada sobre la tarea, consultar los archivos de contexto del proyecto para entender el entorno de desarrollo, y proceder a modificar los archivos necesarios para realizar la optimización o adición solicitada.
 
-Especificaciones del Elemento a Integrar (Datos del Usuario):
+Uso del Contexto del Proyecto (Información Crítica para la Implementación):
+Tienes acceso completo para leer y escribir archivos en el sistema de archivos del proyecto. Es OBLIGATORIO que consultes y utilices la información de los siguientes archivos ubicados en public/ para realizar la implementación correctamente. Esta información te permitirá entender la configuración de estilos, la estructura de directorios, los alias y las convenciones del proyecto antes de realizar cualquier cambio.
+/home/user/studio/public/configuracion_proyecto.txt: Contiene la configuración de Tailwind, rutas CSS globales, alias de directorios, etc.
+/home/user/studio/public/estructura_proyecto.json: Representa la estructura actual de directorios y archivos.
 
-Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
-Nombre Específico: ${componentSpecificName || '[Por favor, introduce un nombre específico]'}
-Directorio de Destino Base: ${destinationDirectory || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio general donde la acción tendrá lugar, relevante si se crea un archivo nuevo).
-Objetivo de Integración: ${targetDescription}
-Acción de Integración Requerida: ${integrationActionText}
-Código HTML Base del Elemento:
+Especificaciones de la Tarea (Información Proporcionada por el Usuario):
 
-\`\`\`html
-${htmlCode || '[Por favor, pega el código HTML aquí]'}
-\`\`\`
-Nota: Si el archivo de destino o el nuevo archivo es .tsx (React/Next.js), DEBES convertir y adaptar este HTML a sintaxis JSX válida.
+Archivo/Elemento Objetivo: ${targetFile || '[Por favor, selecciona un archivo objetivo]'} (Esta es la ruta exacta del archivo que debes leer y modificar. Valida esta ruta usando estructura_proyecto.json).
+Tipo de Modificación: ${modificationType || '[Por favor, selecciona un tipo de modificación]'}
+Instrucciones/Detalles Específicos:
+${formattedSpecificInstructions || '[El contenido ingresado por el usuario en el área de texto para detalles. El formato y contenido dependerán del "Tipo de Modificación".]'}
+Si es Optimizar Código: Describe qué aspectos del código deben optimizarse (ej: "Refactorizar la lógica de manejo de estado", "Mejorar la eficiencia de la función X", "Limpiar código comentado").
+Si es Optimizar Estilo: Describe qué aspectos del estilo deben optimizarse (ej: "Asegurar que todo el espaciado use utilidades de Tailwind", "Limpiar clases CSS no utilizadas", "Mejorar la responsividad en tamaños medianos").
+Si es Añadir CSS Específico: Proporciona el código CSS exacto a añadir y especifica dónde debe ser añadido (ej: "Añadir estas reglas CSS en src/app/globals.css bajo el selector .mi-clase-personalizada", o "Modificar la regla CSS existente para .alguna-clase en globals.css para incluir estas propiedades"). Nota para la IA: Aunque se solicita CSS específico, siempre que sea posible, considera si la misma funcionalidad se puede lograr con utilidades de Tailwind o variables CSS globales existentes, y prioriza esa aproximación a menos que la instrucción sea muy específica.
+Si es Añadir Importación: Proporciona la sentencia import completa (ej: import { useState } from 'react'; o import { Button } from '@/components/ui/button';). Si es posible, indica en qué parte del archivo debe ir (ej: "al principio del componente principal", "dentro de un useEffect").
+Si es Añadir Dependencia/Plugin: Proporciona el nombre del paquete o plugin (ej: axios, react-query, @hookform/resolvers). Si se especifican, incluye la versión (ej: axios@^1.0.0). Si hay pasos de configuración inicial, descríbelos (ej: "Instalar axios", "Configurar QueryClientProvider en el layout principal").
 
-Instrucciones de Estilo y Adaptación (Cómo Implementar los Estilos):
-**DEBES aplicar estilos activamente al elemento integrado utilizando EXCLUSIVAMENTE las utilidades de Tailwind CSS y las clases/variables definidas en \`src/app/globals.css\`, consultando \`tailwind.config.ts\` (accesible vía \`/home/user/studio/public/configuracion_proyecto.txt\`) para la configuración personalizada. NO introduzcas estilos inline (\`style="..."\`) ni nuevas clases CSS globales personalizadas. NO hay instrucciones de estilo explícitas del usuario; debes derivar los estilos apropiados del contexto del proyecto.**
+PLAN DE IMPLEMENTACIÓN (Pasos que DEBES Ejecutar Secuencialmente en el Proyecto):
+Análisis del Archivo Objetivo: Lee el contenido actual del "Archivo/Elemento Objetivo" (${targetFile || '[Ruta del Archivo Objetivo]'}).
+Aplicación de la Modificación: Basándote en el "Tipo de Modificación" y las "Instrucciones/Detalles Específicos", realiza los cambios necesarios en el código del archivo objetivo.
+Si es Optimizar Código/Estilo: Modifica el código existente para aplicar las optimizaciones solicitadas, utilizando el contexto del proyecto (Tailwind, CSS global, alias) para guiar los cambios de estilo y estructura.
+Si es Añadir CSS Específico: Abre el archivo src/app/globals.css y añade o modifica las reglas CSS según las instrucciones.
+Si es Añadir Importación: Inserta la sentencia import proporcionada en la ubicación adecuada dentro del "Archivo/Elemento Objetivo", utilizando los alias (@/) si corresponden.
+Si es Añadir Dependencia/Plugin:
+Modifica el archivo package.json para añadir la nueva dependencia en la sección dependencies o devDependencies según corresponda.
+Si se especificaron pasos de configuración inicial, realiza las modificaciones necesarias en los archivos relevantes (ej: src/app/layout.tsx, archivos de configuración, etc.), utilizando los alias correctos.
+Ajustes Colaterales (Si Aplica): Si la modificación principal requiere ajustes en otras partes del código del archivo objetivo (ej: usar un hook recién importado, ajustar llamadas a API después de añadir axios), realiza esos ajustes.
+Verificación de Sintaxis y Coherencia: Revisa todos los archivos modificados (${targetFile ? `[${targetFile}]` : '[Ruta del Archivo Objetivo]'}, src/app/globals.css, package.json, etc.) para asegurar que la sintaxis sea correcta y que los cambios de estilo sean coherentes con el proyecto (usando Tailwind y CSS global según el contexto).
+GUARDAR CAMBIOS DEFINITIVAMENTE: CONFIRMA Y GUARDA todos los archivos modificados en el sistema de archivos del proyecto. Esta es una acción esencial.
+Reporte de Ejecución: Proporciona una lista clara de todos los archivos que fueron modificados durante esta tarea y describe brevemente la naturaleza del cambio en cada uno (ej: "Modificado src/components/sections/HeroSection.tsx para optimizar estilos y añadir importación de useInView. Modificado package.json para añadir axios.").
 
-Como parte de la implementación de estilos, DEBES asegurar que el elemento:
-
-**Se vea visualmente integrado y consistente con el diseño general del proyecto, utilizando los colores, tipografía y espaciado de la paleta definida en Tailwind y \`globals.css\` (obtenidos de \`/home/user/studio/public/configuracion_proyecto.txt\`).**
-Utilice las clases de utilidad de Tailwind para layout (flex, grid), dimensiones, espaciado, tipografía, bordes, sombras, etc.
-Haga uso de las variables CSS globales (--primary, --background, --radius, etc.) según corresponda, generalmente a través de las clases de utilidad de Tailwind (ej: text-primary, bg-card).
-Sea completamente responsivo y se adapte correctamente a diferentes tamaños de pantalla, utilizando las utilidades responsivas de Tailwind (ej: sm:, md:, lg:) para ajustar layout, tamaño de fuente, espaciado, etc.
-PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
-
-1.  Determinación de Archivo(s) y Ubicación:
-    *   Basado en el "Tipo de Elemento", el "Directorio de Destino Base", y el "Objetivo de Integración", determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\`, \`src/app/${componentSpecificName || 'nueva-pagina'}/page.tsx\`, o modificar el archivo existente \`${integrationTarget}\`).
-    *   Si se integra en un archivo existente (\`${integrationTarget}\`), identifica el punto de inserción lógico (ej., añadir import y uso de componente, o insertar HTML/JSX directamente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer).
-    *   Si se crea un nuevo archivo de componente/sección, identifica también la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto o requerir una suposición lógica, a menudo será el archivo especificado si 'integrar en existente' fue la lógica implícita antes).
-2.  Implementación del Código y Estilos (Modificación/Creación):
-    *   Toma el "Código HTML Base".
-    *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto.** Asegura la responsividad.
-    *   Escribe el contenido completo del nuevo archivo .tsx (si aplica) o modifica el archivo existente.
-3.  Integración (si se creó un nuevo componente/sección):
-    *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante donde este componente debe ser utilizado (será \`${integrationTarget}\` si se especificó un archivo existente, o una página inferida si se eligió 'Crear Nueva').
-    *   Añade la sentencia \`import\` para el nuevo componente en ese archivo (usa alias).
-    *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la ubicación lógica dentro de ese archivo.
-4.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
-5.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
+Confirmación de Inicio:
+Confirma que has leído y entendido estas instrucciones, has accedido al contexto del proyecto, y procederás inmediatamente a ejecutar el plan de implementación modificando archivos en el proyecto.
 
 FIN DEL PROMPT`;
+    // --- End of Optimization Prompt Template ---
 
     setGeneratedPrompt(prompt);
   }, [formData]);
@@ -278,122 +252,90 @@ FIN DEL PROMPT`;
     );
   }, [generatedPrompt, toast]);
 
-  // JSX structure copied from src/app/page.tsx, with IDs added
+  // --- UPDATED JSX structure for Optimization Form ---
   return (
     <div id="optimizar-page-container" className="container mx-auto p-4 md:p-8 flex flex-col">
       <header id="optimizar-page-header" className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">PromptForge (Optimizar Page)</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">PromptForge (Optimization)</h1>
         <p className="text-muted-foreground">
-          Generate structured prompts for AI-powered web component generation. (Optimized Version)
+          Generate structured prompts for AI-powered web component optimization and modification.
         </p>
       </header>
 
       <div id="optimizar-main-grid" className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-grow">
-        {/* Input Card */}
+        {/* Input Card for Optimization */}
         <Card id="optimizar-input-card" className="flex flex-col">
           <CardHeader>
-            <CardTitle>Component Details</CardTitle>
+            <CardTitle>Optimization Details</CardTitle>
             <CardDescription>
-              Provide the details for the component you want to generate.
+              Provide the details for the optimization or modification you want to perform.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow space-y-4">
-            {/* Component Type Select */}
-            <div id="optimizar-type-select-group" className="space-y-2">
-              <Label htmlFor="componentType">Tipo</Label>
+
+            {/* Target File Combobox */}
+            <div id="optimizar-target-file-combobox-group" className="space-y-2">
+                <Label htmlFor="targetFile">Archivo/Elemento Objetivo</Label>
+                <Combobox
+                    options={filePaths} // Use filePaths fetched from structure
+                    value={formData.targetFile}
+                    onChange={handleTargetFileChange}
+                    placeholder={isLoadingPaths ? "Loading files..." : "Select target file..."}
+                    searchPlaceholder="Search file to optimize..."
+                    emptyPlaceholder="No matching file found."
+                    disabled={isLoadingPaths}
+                    triggerClassName="w-full" // Ensure button takes full width
+                    contentClassName="w-[--radix-popover-trigger-width]" // Match trigger width
+                 />
+                <p className="text-xs text-muted-foreground pt-1">
+                    Select the existing file (Page, Component, etc.) you want to optimize or modify.
+                </p>
+            </div>
+
+            {/* Modification Type Select */}
+            <div id="optimizar-modification-type-select-group" className="space-y-2">
+              <Label htmlFor="modificationType">Tipo de Modificación</Label>
               <Select
-                name="componentType"
-                value={formData.componentType}
-                onValueChange={handleComponentTypeChange}
+                name="modificationType"
+                value={formData.modificationType}
+                onValueChange={handleModificationTypeChange}
               >
-                <SelectTrigger id="componentType" aria-label="Selecciona el tipo de componente">
-                  <SelectValue placeholder="Selecciona Sección, Componente o Página" />
+                <SelectTrigger id="modificationType" aria-label="Selecciona el tipo de modificación">
+                  <SelectValue placeholder="Selecciona el tipo de modificación" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Sección">Sección</SelectItem>
-                  <SelectItem value="Componente">Componente</SelectItem>
-                  <SelectItem value="Página">Página</SelectItem>
+                  <SelectItem value="Optimizar Código">Optimizar Código</SelectItem>
+                  <SelectItem value="Optimizar Estilo">Optimizar Estilo</SelectItem>
+                  <SelectItem value="Añadir CSS Específico">Añadir CSS Específico</SelectItem>
+                  <SelectItem value="Añadir Importación">Añadir Importación</SelectItem>
+                  <SelectItem value="Añadir Dependencia/Plugin">Añadir Dependencia/Plugin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Specific Name Input */}
-            <div id="optimizar-name-input-group" className="space-y-2">
-              <Label htmlFor="componentSpecificName">Nombre Específico</Label>
-              <Input
-                id="componentSpecificName"
-                name="componentSpecificName"
-                placeholder="e.g., HeroConBoton, FormularioContacto"
-                value={formData.componentSpecificName}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            {/* HTML Code Textarea */}
-            <div id="optimizar-html-input-group" className="space-y-2">
-              <Label htmlFor="htmlCode">HTML Code</Label>
+            {/* Specific Instructions Textarea */}
+            <div id="optimizar-instructions-input-group" className="space-y-2">
+              <Label htmlFor="specificInstructions">
+                Instrucciones/Detalles Específicos
+              </Label>
               <Textarea
-                id="htmlCode"
-                name="htmlCode"
-                placeholder="<section class='hero'>...</section>"
-                value={formData.htmlCode}
+                id="specificInstructions"
+                name="specificInstructions"
+                placeholder={instructionPlaceholders[formData.modificationType || '']}
+                value={formData.specificInstructions}
                 onChange={handleInputChange}
-                rows={6}
+                rows={8} // Give more space for instructions
                 className="font-mono text-sm"
               />
-            </div>
-
-            {/* Destination Directory Select */}
-            <div id="optimizar-dir-select-group" className="space-y-2">
-              <Label htmlFor="destinationDirectory">Directorio de Destino Base</Label>
-              <Select
-                name="destinationDirectory"
-                value={formData.destinationDirectory}
-                onValueChange={handleDestinationDirectoryChange}
-                disabled={isLoadingPaths}
-              >
-                <SelectTrigger id="destinationDirectory" aria-label="Select base destination directory">
-                  <SelectValue placeholder={isLoadingPaths ? "Loading directories..." : "Select a base directory..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {!isLoadingPaths && directoryPaths.length > 0 ? (
-                    directoryPaths.map((path) => (
-                      <SelectItem key={path} value={path}>
-                        {path}
-                      </SelectItem>
-                    ))
-                  ) : !isLoadingPaths ? (
-                    <SelectItem value="no-dirs" disabled>No directories found</SelectItem>
-                  ) : null}
-                </SelectContent>
-              </Select>
               <p className="text-xs text-muted-foreground pt-1">
-                Select the base directory for the component/page. Relevant if creating a new file.
+                Provide clear and specific details based on the "Tipo de Modificación" selected.
               </p>
             </div>
 
-            {/* Integration Target Combobox */}
-            <div id="optimizar-target-combobox-group" className="space-y-2">
-              <Label htmlFor="integrationTarget">Objetivo de Integración</Label>
-              <Combobox
-                options={filePaths}
-                value={formData.integrationTarget}
-                onChange={handleIntegrationTargetChange}
-                placeholder={isLoadingPaths ? "Loading files..." : "Select target file or create new..."}
-                searchPlaceholder="Search file or select 'Create New'..."
-                emptyPlaceholder="No matching file found."
-                disabled={isLoadingPaths}
-                triggerClassName="w-full"
-                contentClassName="w-[--radix-popover-trigger-width]"
-              />
-              <p className="text-xs text-muted-foreground pt-1">
-                Search for an existing file to integrate into, or select 'Crear Nueva Página/Archivo'.
-              </p>
-            </div>
           </CardContent>
           <CardFooter id="optimizar-input-card-footer">
-            <Button onClick={generatePrompt} className="w-full">
-              Generate Prompt
+            <Button onClick={generatePrompt} className="w-full" disabled={isLoadingPaths}>
+               {isLoadingPaths ? 'Loading Files...' : 'Generate Optimization Prompt'}
             </Button>
           </CardFooter>
         </Card>
@@ -401,7 +343,7 @@ FIN DEL PROMPT`;
         {/* Generated Prompt Card */}
         <Card id="optimizar-prompt-card" className="flex flex-col">
           <CardHeader>
-            <CardTitle>Generated Prompt</CardTitle>
+            <CardTitle>Generated Optimization Prompt</CardTitle>
             <CardDescription>
               Copy the prompt below and paste it into your target AI tool.
             </CardDescription>
@@ -411,7 +353,7 @@ FIN DEL PROMPT`;
               id="optimizar-prompt-display"
               readOnly
               value={generatedPrompt}
-              placeholder="Generated prompt will appear here..."
+              placeholder="Generated optimization prompt will appear here..."
               rows={20} // Keep original rows or adjust if needed
               className="w-full font-mono text-sm resize-none" // Maintain original styling
               aria-label="Generated Prompt"
@@ -431,7 +373,7 @@ FIN DEL PROMPT`;
       </div>
 
       <footer id="optimizar-page-footer" className="mt-8 text-center text-muted-foreground text-sm">
-        Built with Next.js, Tailwind CSS, and ShadCN UI. (Optimized Version)
+        Built with Next.js, Tailwind CSS, and ShadCN UI. (Optimization Prompt Generator)
       </footer>
     </div>
   );
