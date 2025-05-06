@@ -39,10 +39,14 @@ const extractSrcDirectories = (structure: any): string[] => {
     return [];
   }
   const srcDirs = Object.keys(structure.src).filter(key => {
+      // Ensure the key points to an object (directory) and isn't hidden
       return typeof structure.src[key] === 'object' && structure.src[key] !== null && !key.startsWith('.');
   });
+  // Filter out potential files at the root of src if needed, though Object.keys is usually sufficient
+  // Return full paths
   return srcDirs.map(dir => `src/${dir}`).sort();
 };
+
 
 // Helper function to extract all file paths from the project structure recursively
 const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
@@ -411,8 +415,8 @@ FIN DEL PROMPT`;
               readOnly
               value={generatedPrompt}
               placeholder="Generated prompt will appear here..."
-              rows={generatedPrompt ? Math.max(15, generatedPrompt.split('\n').length + 2) : 15} // Dynamic height
-              className="w-full h-full font-mono text-sm resize-none"
+              rows={20} // Adjusted rows to be smaller
+              className="w-full font-mono text-sm resize-none" // Removed h-full
               aria-label="Generated Prompt"
             />
           </CardContent>
