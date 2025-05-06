@@ -17,17 +17,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
-// Define navigation links based on common pages found in estructura_proyecto.json
-// You might need to adjust these based on the actual, desired navigation structure
+// Define navigation links based on the user request
 const navLinks = [
   { href: '/', label: 'Inicio' },
-  { href: '/envios-emprendedores', label: 'Emprendedores' },
-  { href: '/mensajeria-envios-express', label: 'Envíos Express' },
-  { href: '/mensajeria-envios-lowcost', label: 'Envíos Low Cost' },
-  { href: '/sobre-nosotros', label: 'Nosotros' },
-  { href: '/contacto', label: 'Contacto' },
-  { href: '/preguntasfrecuentes', label: 'FAQ' },
-  // Add more links as needed based on the structure in /public/estructura_proyecto.json
+  { href: '/optimizar', label: 'Optimizar' },
 ];
 
 const Navbar: FC = () => {
@@ -41,21 +34,21 @@ const Navbar: FC = () => {
           <Link href="/" className="flex items-center space-x-2 py-2">
             <Image
               src="https://picsum.photos/50/50" // Placeholder image
-              alt="Envios DosRuedas Logo"
+              alt="PromptForge Logo" // Updated Alt Text
               width={50}
               height={50}
               className="h-10 sm:h-12 w-auto transition-all rounded-full"
-              data-ai-hint="logo delivery" // AI Hint for image search
+              data-ai-hint="logo tool" // AI Hint for image search
             />
             <div className="hidden md:block">
               <h1 className="text-primary-foreground text-lg sm:text-xl font-bold leading-tight">
-                Envios DosRuedas
+                PromptForge
               </h1>
             </div>
              {/* Show title on small screens when logo is smaller */}
             <div className="md:hidden">
                <h1 className="text-primary-foreground text-base font-bold leading-tight">
-                 Envios DosRuedas
+                 PromptForge
                </h1>
             </div>
           </Link>
