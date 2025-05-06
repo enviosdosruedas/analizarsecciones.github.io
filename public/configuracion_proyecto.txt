@@ -1,0 +1,365 @@
+=== components.json ===
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+
+=== next.config.ts ===
+import type {NextConfig} from 'next';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+
+
+=== package.json ===
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 9002",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@genkit-ai/googleai": "^1.6.2",
+    "@genkit-ai/next": "^1.6.2",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "@tanstack-query-firebase/react": "^1.0.5",
+    "@tanstack/react-query": "^5.66.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "embla-carousel-react": "^8.1.7",
+    "firebase": "^11.6.1-firebase-studio-sdk-integration.9de25069c",
+    "genkit": "^1.6.2",
+    "lucide-react": "^0.475.0",
+    "next": "15.2.3",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "genkit-cli": "^1.6.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
+
+
+=== postcss.config.mjs ===
+/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    tailwindcss: {},
+  },
+};
+
+export default config;
+
+
+=== tailwind.config.ts ===
+import type { Config } from "tailwindcss";
+
+export default {
+    darkMode: ["class"],
+    content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+  	extend: {
+  		colors: {
+        // New Custom Palette
+        'royal-blue-traditional': { DEFAULT: '#00296b', 100: '#c5cffd', 200: '#8b9ffb', 300: '#5170f9', 400: '#1740f7', 500: '#00296b', 600: '#00225a', 700: '#001a48', 800: '#001337', 900: '#000b25' },
+        'marian-blue': { DEFAULT: '#003f88', 100: '#cce0ff', 200: '#99c2ff', 300: '#66a3ff', 400: '#3385ff', 500: '#003f88', 600: '#00326d', 700: '#002552', 800: '#001837', 900: '#000c1c' }, // Added Marian Blue definition
+        'polynesian-blue': { DEFAULT: '#00509d', 100: '#ccedff', 200: '#99daff', 300: '#66c6ff', 400: '#33b3ff', 500: '#00509d', 600: '#00407e', 700: '#00305e', 800: '#00203f', 900: '#00101f' },
+        'mikado-yellow': { DEFAULT: '#fdc500', 100: '#fff4cc', 200: '#ffe999', 300: '#ffde66', 400: '#ffd333', 500: '#fdc500', 600: '#cca000', 700: '#997800', 800: '#665000', 900: '#332800' },
+        'gold': { DEFAULT: '#ffd500', 100: '#fff7cc', 200: '#ffef99', 300: '#ffe666', 400: '#ffdd33', 500: '#ffd500', 600: '#ccaa00', 700: '#997f00', 800: '#665500', 900: '#332a00' }, // Added Gold definition
+
+
+        // Shadcn UI Theme Colors (mapped from HSL variables in globals.css)
+  			background: 'hsl(var(--background))',
+  			foreground: 'hsl(var(--foreground))',
+  			card: {
+  				DEFAULT: 'hsl(var(--card))',
+  				foreground: 'hsl(var(--card-foreground))'
+  			},
+  			popover: {
+  				DEFAULT: 'hsl(var(--popover))',
+  				foreground: 'hsl(var(--popover-foreground))'
+  			},
+  			primary: {
+  				DEFAULT: 'hsl(var(--primary))', // Uses --primary from globals.css
+  				foreground: 'hsl(var(--primary-foreground))' // Uses --primary-foreground from globals.css
+  			},
+  			secondary: {
+  				DEFAULT: 'hsl(var(--secondary))', // Uses --secondary from globals.css
+  				foreground: 'hsl(var(--secondary-foreground))' // Uses --secondary-foreground from globals.css
+  			},
+  			muted: {
+  				DEFAULT: 'hsl(var(--muted))',
+  				foreground: 'hsl(var(--muted-foreground))'
+  			},
+  			accent: {
+  				DEFAULT: 'hsl(var(--accent))', // Uses --accent from globals.css
+  				foreground: 'hsl(var(--accent-foreground))' // Uses --accent-foreground from globals.css
+  			},
+  			destructive: {
+  				DEFAULT: 'hsl(var(--destructive))',
+  				foreground: 'hsl(var(--destructive-foreground))'
+  			},
+  			border: 'hsl(var(--border))',
+  			input: 'hsl(var(--input))',
+  			ring: 'hsl(var(--ring))',
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-background))',
+  				foreground: 'hsl(var(--sidebar-foreground))',
+  				primary: 'hsl(var(--sidebar-primary))',
+  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+  				border: 'hsl(var(--sidebar-border))',
+  				ring: 'hsl(var(--sidebar-ring))'
+  			}
+  		},
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		keyframes: {
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
+  			}
+  		},
+  		animation: {
+  			'accordion-down': 'accordion-down 0.2s ease-out',
+  			'accordion-up': 'accordion-up 0.2s ease-out'
+  		}
+  	}
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;
+
+
+=== tsconfig.json ===
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+=== src/app/globals.css ===
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    /* ShadCN Theme Variables (Light) - Mapped to New Palette */
+    --background: 0 0% 100%; /* White */
+    --foreground: 210 29% 14%; /* Default Dark Blue-Gray (Good Contrast) */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 210 29% 14%; /* Default Dark Blue-Gray */
+
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 210 29% 14%; /* Default Dark Blue-Gray */
+
+    /* === NEW PALETTE MAPPING === */
+    --primary: 216 100% 21%; /* royal-blue-traditional (#00296b) */
+    --primary-foreground: 0 0% 98%; /* Almost White (Good contrast on royal blue) */
+
+    --secondary: 209 100% 31%; /* polynesian-blue (#00509d) */
+    --secondary-foreground: 0 0% 98%; /* Almost White (Good contrast on polynesian blue) */
+
+    --muted: 0 0% 96.1%; /* Default Light Gray */
+    --muted-foreground: 0 0% 45.1%; /* Default Medium Gray */
+
+    --accent: 47 100% 50%; /* mikado-yellow (#fdc500) */
+    --accent-foreground: 227 96% 8%; /* Dark Royal Blue (Contrast for yellow) */
+
+    --destructive: 0 84.2% 60.2%; /* Default Red */
+    --destructive-foreground: 0 0% 98%; /* Almost White */
+
+    --border: 0 0% 89.8%; /* Default Light Gray */
+    --input: 0 0% 89.8%; /* Default Light Gray */
+    --ring: 209 100% 31%; /* polynesian-blue (#00509d) - Using secondary for ring */
+
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ShadCN Theme Variables (Dark) - Mapped to New Palette */
+    --background: 216 100% 8%; /* Dark Royal Blue */
+    --foreground: 0 0% 98%; /* Almost White */
+
+    --card: 216 100% 12%; /* Slightly Lighter Dark Royal Blue */
+    --card-foreground: 0 0% 98%; /* Almost White */
+
+    --popover: 216 100% 6%; /* Darker Royal Blue */
+    --popover-foreground: 0 0% 98%; /* Almost White */
+
+    /* === NEW PALETTE MAPPING (Dark) === */
+    --primary: 216 100% 70%; /* Lighter Royal Blue for contrast */
+    --primary-foreground: 216 100% 8%; /* Dark Background */
+
+    --secondary: 209 100% 70%; /* Lighter Polynesian Blue */
+    --secondary-foreground: 0 0% 9%; /* Near Black */
+
+    --muted: 216 100% 16%; /* Slightly lighter dark blue */
+    --muted-foreground: 0 0% 63.9%; /* Lighter Gray */
+
+    --accent: 47 100% 50%; /* mikado-yellow (#fdc500) */
+    --accent-foreground: 227 96% 8%; /* Dark Royal Blue */
+
+    --destructive: 0 62.8% 30.6%; /* Darker Red */
+    --destructive-foreground: 0 0% 98%; /* Almost White */
+
+    --border: 216 100% 16%; /* Slightly lighter dark blue */
+    --input: 216 100% 16%; /* Slightly lighter dark blue */
+    --ring: 209 100% 70%; /* Lighter Polynesian Blue */
+
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+
