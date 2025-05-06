@@ -1,7 +1,7 @@
+
 'use client';
 
-import { useState, useCallback } from 'react';
-import type { FC } from 'react';
+import { useState, useCallback, useEffect, type FC } from 'react';
 import { Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,10 +21,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'; // Import Select components
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
-// Updated FormData interface - removed styleInstructions
 interface FormData {
   componentType: 'Sección' | 'Componente' | 'Página' | '';
   componentSpecificName: string;
@@ -33,6 +32,28 @@ interface FormData {
   insertionPosition: string;
 }
 
+// Helper function to recursively extract page paths
+const extractPaths = (obj: any, currentPath: string): string[] => {
+  let paths: string[] = [];
+  if (!obj || typeof obj !== 'object') return paths;
+
+  for (const key in obj) {
+    // Ensure we don't process prototype properties
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) continue;
+
+    const newPath = currentPath ? `${currentPath}/${key}` : key;
+    // Check if the key is 'page.tsx' and its value is null (as per the structure file format)
+    if (key === 'page.tsx' && obj[key] === null) {
+      paths.push(newPath);
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      // Recursively check sub-objects/directories
+      paths = paths.concat(extractPaths(obj[key], newPath));
+    }
+  }
+  return paths;
+};
+
+
 const PromptForgePage: FC = () => {
   const [formData, setFormData] = useState<FormData>({
     componentType: '',
@@ -40,28 +61,83 @@ const PromptForgePage: FC = () => {
     htmlCode: '',
     destinationPage: '',
     insertionPosition: '',
-    // Removed styleInstructions from initial state
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
+  const [pagePaths, setPagePaths] = useState<string[]>([]); // State for page paths
+  const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state
   const { toast } = useToast();
+
+  // Fetch and process project structure on component mount
+  useEffect(() => {
+    const fetchAndProcessStructure = async () => {
+      setIsLoadingPaths(true);
+      try {
+        const response = await fetch('/estructura_proyecto.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const structure = await response.json();
+
+        if (structure?.src?.app) {
+          const extracted = extractPaths(structure.src.app, 'src/app');
+          // Sort paths alphabetically for better UX
+          extracted.sort();
+          setPagePaths(extracted);
+        } else {
+          console.error("Invalid structure format in estructura_proyecto.json");
+          setPagePaths([]);
+          toast({
+            title: 'Warning',
+            description: 'Could not find valid page structure in estructura_proyecto.json.',
+            variant: 'destructive', // Use destructive variant for warnings/errors
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch or process project structure:", error);
+        setPagePaths([]); // Set to empty array on error
+        toast({
+          title: 'Error',
+          description: 'Failed to load page structure. Please check console.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingPaths(false);
+      }
+    };
+
+    fetchAndProcessStructure();
+  }, [toast]); // Add toast to dependency array
+
 
   const handleInputChange = useCallback(
     (
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
       const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
+       // Only update if it's not the destinationPage (handled by Select)
+       if (name !== 'destinationPage') {
+           setFormData((prev) => ({ ...prev, [name]: value }));
+       }
     },
     []
   );
 
-  // Handler for Select component change
-  const handleSelectChange = useCallback((value: string) => {
+  // Handler for Component Type Select change
+  const handleComponentTypeChange = useCallback((value: string) => {
     setFormData((prev) => ({
       ...prev,
       componentType: value as FormData['componentType'],
     }));
   }, []);
+
+  // Handler for Destination Page Select change
+   const handleDestinationPageChange = useCallback((value: string) => {
+     setFormData((prev) => ({
+       ...prev,
+       destinationPage: value,
+     }));
+   }, []);
+
 
   const generatePrompt = useCallback(() => {
     const {
@@ -70,10 +146,8 @@ const PromptForgePage: FC = () => {
       htmlCode,
       destinationPage,
       insertionPosition,
-      // Removed styleInstructions
     } = formData;
 
-    // Updated prompt template - instructs AI to use config files for styling
     const prompt = `INICIO DEL PROMPT PARA IA
 
 DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
@@ -102,7 +176,7 @@ Especificaciones del Elemento a Integrar (Datos del Usuario):
 
 Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
 Nombre Específico: ${componentSpecificName || '[Por favor, introduce un nombre específico]'}
-Archivo/Página de Destino: ${destinationPage || '[Por favor, especifica la página de destino]'}
+Archivo/Página de Destino: ${destinationPage || '[Por favor, selecciona una página de destino]'}
 Ubicación de Inserción: En el archivo ${destinationPage || '[Nombre del Archivo/Página de Destino]'}, localiza y realiza la inserción en el siguiente punto específico: ${insertionPosition || '[Por favor, describe la ubicación de inserción]'}
 Código HTML Base del Elemento:
 
@@ -195,7 +269,7 @@ FIN DEL PROMPT`;
               <Select
                 name="componentType"
                 value={formData.componentType}
-                onValueChange={handleSelectChange}
+                onValueChange={handleComponentTypeChange} // Use specific handler
               >
                 <SelectTrigger id="componentType" aria-label="Selecciona el tipo de componente">
                   <SelectValue placeholder="Selecciona Sección, Componente o Página" />
@@ -232,16 +306,33 @@ FIN DEL PROMPT`;
                 className="font-mono text-sm"
               />
             </div>
+
+            {/* Select for Destination Page */}
             <div className="space-y-2">
               <Label htmlFor="destinationPage">Destination Page</Label>
-              <Input
-                id="destinationPage"
+              <Select
                 name="destinationPage"
-                placeholder="e.g., src/app/page.tsx or src/app/about/page.tsx"
                 value={formData.destinationPage}
-                onChange={handleInputChange}
-              />
+                onValueChange={handleDestinationPageChange} // Use specific handler
+                disabled={isLoadingPaths} // Disable while loading
+              >
+                <SelectTrigger id="destinationPage" aria-label="Select destination page">
+                  <SelectValue placeholder={isLoadingPaths ? "Loading pages..." : "Select a page..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {!isLoadingPaths && pagePaths.length > 0 ? (
+                    pagePaths.map((path) => (
+                      <SelectItem key={path} value={path}>
+                        {path}
+                      </SelectItem>
+                    ))
+                  ) : !isLoadingPaths ? (
+                    <SelectItem value="no-pages" disabled>No pages found</SelectItem>
+                  ) : null /* Render nothing while loading */}
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="insertionPosition">Insertion Position</Label>
               <Input
@@ -299,3 +390,4 @@ FIN DEL PROMPT`;
 };
 
 export default PromptForgePage;
+
