@@ -19,6 +19,10 @@ def get_directory_structure_and_content(startpath, output_file):
         startpath (str): The path to the directory to scan.
         output_file (str): The path to the file where the output will be saved.
     """
+
+    # Define the file to skip
+    file_to_skip = "/home/user/studio/src/app/favicon.ico"
+
     try:
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(f"Scanning directory: {startpath}\n")
@@ -36,20 +40,23 @@ def get_directory_structure_and_content(startpath, output_file):
                 subindent = ' ' * 4 * (level + 1)
 
                 # Process files in the current directory
-                for f in files:
-                    file_path = os.path.join(root, f)
-                    outfile.write(f"{subindent}File: {f}\n")
-                    outfile.write(f"{subindent}--- START OF CONTENT ---\n")
-                    try:
-                        # Read file content
-                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
-                            content = infile.read()
-                            # Indent each line of the content for readability in the output file
-                            indented_content = '\n'.join([f"{subindent}{line}" for line in content.splitlines()])
-                            outfile.write(indented_content + '\n')
-                    except Exception as e:
-                        outfile.write(f"{subindent}Error reading file {file_path}: {e}\n")
-                    outfile.write(f"{subindent}--- END OF CONTENT ---\n\n")
+                for file in files:
+                    file_path = os.path.join(root, file)
+
+                    if file_path != file_to_skip:
+                        outfile.write(f"{subindent}File: {file}\n")
+                        outfile.write(f"{subindent}--- START OF CONTENT ---\n")
+                        try:
+                            # Read file content
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
+                                content = infile.read()
+                                # Indent each line of the content for readability in the output file
+                                indented_content = '\n'.join([f"{subindent}{line}" for line in content.splitlines()])
+                                outfile.write(indented_content + '\n')
+                        except Exception as e:
+                            outfile.write(f"{subindent}Error reading file {file_path}: {e}\n")
+                        outfile.write(f"{subindent}--- END OF CONTENT ---\n\n")
+
             outfile.write("=" * 40 + "\n")
             outfile.write("Scan complete.\n")
         print(f"Successfully scanned '{startpath}' and saved structure and content to '{output_file}'")
