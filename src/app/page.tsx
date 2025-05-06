@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Import RadioGroup
 import { useToast } from '@/hooks/use-toast';
 
 interface FormData {
@@ -29,7 +30,7 @@ interface FormData {
   componentSpecificName: string;
   htmlCode: string;
   destinationDirectory: string; // Renamed from destinationPage
-  // insertionPosition: string; // Removed as requested
+  integrationTarget: 'existing' | 'new' | ''; // Added for integration choice
 }
 
 // Helper function to extract top-level directories under src/
@@ -53,7 +54,7 @@ const PromptForgePage: FC = () => {
     componentSpecificName: '',
     htmlCode: '',
     destinationDirectory: '',
-    // insertionPosition: '', // Removed as requested
+    integrationTarget: '', // Initialize integration target
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
   const [directoryPaths, setDirectoryPaths] = useState<string[]>([]); // State for directory paths
@@ -131,6 +132,14 @@ const PromptForgePage: FC = () => {
      }));
    }, []);
 
+  // Handler for Integration Target RadioGroup change
+  const handleIntegrationTargetChange = useCallback((value: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        integrationTarget: value as FormData['integrationTarget'],
+      }));
+  }, []);
+
 
   const generatePrompt = useCallback(() => {
     const {
@@ -138,16 +147,13 @@ const PromptForgePage: FC = () => {
       componentSpecificName,
       htmlCode,
       destinationDirectory, // This now contains the selected directory
-      // insertionPosition, // Removed
+      integrationTarget, // New field value
     } = formData;
 
-    // **IMPORTANT**: The prompt generation logic needs adjustment.
-    // It currently assumes destinationDirectory is a file path.
-    // We need to decide how to use the selected directory.
-    // The 'insertionPosition' concept has been removed as requested.
-    // The AI needs new instructions on *where* to integrate within a target file/directory,
-    // or if it needs to create a new file/page based on subsequent user input (which is not yet implemented).
-    // For now, the prompt structure reflects the removal of 'insertionPosition'.
+    // Determine integration action based on user choice
+    const integrationActionText = integrationTarget === 'new'
+        ? 'DEBES crear una nueva página/archivo en el directorio especificado.'
+        : 'DEBES integrar el elemento en un archivo EXISTENTE dentro del directorio especificado (o el archivo principal si aplica). La IA determinará el archivo específico y la ubicación dentro de él.';
 
     const prompt = `INICIO DEL PROMPT PARA IA
 
@@ -177,8 +183,9 @@ Especificaciones del Elemento a Integrar (Datos del Usuario):
 
 Tipo de Elemento: ${componentType || '[Por favor, selecciona un tipo]'}
 Nombre Específico: ${componentSpecificName || '[Por favor, introduce un nombre específico]'}
-Directorio de Destino: ${destinationDirectory || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio base para la integración. La IA determinará el archivo específico dentro de este directorio o creará uno nuevo según sea necesario).
-Ubicación de Inserción / Archivo(s) de Destino: [SECCIÓN REMOVIDA - La IA debe determinar ahora dónde integrar el código basado en el tipo de elemento, el directorio de destino y las convenciones del proyecto, o si debe crear una nueva página/componente].
+Objetivo de Integración: ${integrationTarget === 'new' ? 'Crear Nueva Página/Archivo' : integrationTarget === 'existing' ? 'Integrar en Página/Archivo Existente' : '[Por favor, selecciona un objetivo]'}
+Directorio de Destino: ${destinationDirectory || '[Por favor, selecciona un directorio de destino]'} (Este es el directorio base para la integración).
+Acción de Integración Requerida: ${integrationActionText || '[Error: Selecciona un objetivo de integración]'}
 Código HTML Base del Elemento:
 
 \`\`\`html
@@ -199,18 +206,17 @@ PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
 
 1.  Análisis de Contexto: Lee y procesa a fondo \`/home/user/studio/public/configuracion_proyecto.txt\` y \`/home/user/studio/public/estructura_proyecto.json\` para tener clara la configuración de estilos (Tailwind, CSS global, variables) y la estructura de archivos (rutas, directorios de componentes/páginas).
 2.  Determinación de Archivo(s) y Ubicación:
-    *   Basado en el "Tipo de Elemento" y el "Directorio de Destino", determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\` o \`src/app/nueva-pagina/page.tsx\`).
-    *   Si el "Tipo de Elemento" es "Componente" o "Sección", DEBES crear un nuevo archivo .tsx dentro del "Directorio de Destino" o un subdirectorio apropiado (usa el "Nombre Específico" para nombrar el archivo). Identifica la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto del proyecto o requerirá asumir una ubicación lógica como la página principal dentro del directorio si no se especifica más).
-    *   Si el "Tipo de Elemento" es "Página", determina la ruta del archivo \`page.tsx\` dentro del "Directorio de Destino" (puede requerir crear subdirectorios si la página es nueva). Si ya existe, lo modificarás; si no, lo crearás.
-    *   [Instrucción Modificada]: Identifica el punto de inserción lógico dentro del archivo de destino (si se modifica uno existente o se integra un nuevo componente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer, o como un nuevo componente principal en una página nueva).
+    *   Basado en el "Tipo de Elemento", el "Directorio de Destino" y el "Objetivo de Integración" ('Crear Nueva' o 'Integrar en Existente'), determina el nombre y la ruta completa del archivo a modificar o crear (ej: \`src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx\`, \`src/app/${componentSpecificName || 'nueva-pagina'}/page.tsx\` o modificar un archivo existente como \`src/app/page.tsx\`).
+    *   Si se integra en un archivo existente, identifica el punto de inserción lógico (ej., añadir import y uso de componente, o insertar HTML/JSX directamente). Si no hay indicación clara, asume un lugar estándar (ej., al final del contenido principal antes del footer).
+    *   Si se crea un nuevo archivo de componente/sección, identifica también la página o componente existente donde este nuevo elemento deberá ser importado y utilizado (puede ser inferido del contexto o requerir una suposición lógica).
 3.  Implementación del Código y Estilos (Modificación/Creación):
     *   Toma el "Código HTML Base".
-    *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto obtenido de los archivos de configuración (\`/home/user/studio/public/configuracion_proyecto.txt\`). Asegura que la responsividad se implemente en este paso.**
+    *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto.** Asegura la responsividad.
     *   Escribe el contenido completo del nuevo archivo .tsx (si aplica) o modifica el archivo existente.
 4.  Integración (si se creó un nuevo componente/sección):
     *   Si creaste un nuevo archivo de componente/sección (.tsx), identifica el archivo .tsx relevante (generalmente una página) donde este componente debe ser utilizado.
-    *   Añade la sentencia \`import\` para el nuevo componente en la parte superior de ese archivo de destino (usa alias, ej: \`import ${componentSpecificName || 'MyComponent'} from '@/components/sections/${componentSpecificName || 'MyComponent'}';\`).
-    *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la ubicación determinada en el paso 2 dentro de ese archivo de destino.
+    *   Añade la sentencia \`import\` para el nuevo componente en ese archivo (usa alias).
+    *   Inserta la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la ubicación lógica dentro de ese archivo.
 5.  Verificación y Limpieza: Revisa los archivos modificados/creados para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
 6.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
 
@@ -334,11 +340,34 @@ FIN DEL PROMPT`;
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground pt-1">
-                Select the base directory for the component/page. The AI will determine the specific file or create a new one.
+                Select the base directory for the component/page.
               </p>
             </div>
 
-            {/* Insertion Position section removed as requested */}
+             {/* RadioGroup for Integration Target */}
+            <div className="space-y-2">
+                <Label htmlFor="integrationTarget">Objetivo de Integración</Label>
+                <RadioGroup
+                id="integrationTarget"
+                name="integrationTarget"
+                value={formData.integrationTarget}
+                onValueChange={handleIntegrationTargetChange}
+                className="flex space-x-4" // Arrange options horizontally
+                >
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="existing" id="existing" />
+                    <Label htmlFor="existing">Integrar en Existente</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="new" id="new" />
+                    <Label htmlFor="new">Crear Nueva Página/Archivo</Label>
+                </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground pt-1">
+                Choose whether to add to an existing file or create a new one. The AI will determine the specific file/location.
+                </p>
+            </div>
+
 
           </CardContent>
           <CardFooter>
