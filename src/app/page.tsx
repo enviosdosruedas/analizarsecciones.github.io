@@ -24,24 +24,23 @@ import {
 } from '@/components/ui/select'; // Import Select components
 import { useToast } from '@/hooks/use-toast';
 
-// Updated FormData interface
+// Updated FormData interface - removed styleInstructions
 interface FormData {
-  componentType: 'Sección' | 'Componente' | 'Página' | ''; // Added componentType
-  componentSpecificName: string; // Added componentSpecificName
+  componentType: 'Sección' | 'Componente' | 'Página' | '';
+  componentSpecificName: string;
   htmlCode: string;
   destinationPage: string;
   insertionPosition: string;
-  styleInstructions: string;
 }
 
 const PromptForgePage: FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    componentType: '', // Initialize componentType
-    componentSpecificName: '', // Initialize componentSpecificName
+    componentType: '',
+    componentSpecificName: '',
     htmlCode: '',
     destinationPage: '',
     insertionPosition: '',
-    styleInstructions: '',
+    // Removed styleInstructions from initial state
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
   const { toast } = useToast();
@@ -71,18 +70,10 @@ const PromptForgePage: FC = () => {
       htmlCode,
       destinationPage,
       insertionPosition,
-      styleInstructions,
+      // Removed styleInstructions
     } = formData;
 
-    // Split style instructions into bullet points for the prompt
-    const formattedStyleInstructionsList = styleInstructions
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .map((line) => `* ${line}`) // Keep the '*' for list formatting in the prompt
-      .join('\n');
-
-    // New detailed prompt template
+    // Updated prompt template - instructs AI to use config files for styling
     const prompt = `INICIO DEL PROMPT PARA IA
 
 DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
@@ -90,7 +81,7 @@ DIRECTIVA DE ACCIÓN INMEDIATA: IMPLEMENTAR CAMBIOS EN EL PROYECTO
 Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto (perceptible como "Firebase Studio" o similar). Tu función es actuar directamente sobre los archivos del proyecto para integrar el elemento web solicitado.
 
 Procedimiento Requerido:
-Debes leer la información proporcionada, consultar los archivos de contexto del proyecto, y proceder a modificar o crear los archivos necesarios para integrar el elemento web según las especificaciones.
+Debes leer la información proporcionada, consultar los archivos de contexto del proyecto, y proceder a modificar o crear los archivos necesarios para integrar el elemento web según las especificaciones, **determinando los estilos adecuados basándote en la configuración y estructura del proyecto.**
 
 Contexto Detallado del Proyecto (Información Crítica para la Implementación):
 Tienes acceso completo para leer y escribir archivos en el sistema de archivos del proyecto. Es OBLIGATORIO que consultes y utilices la información de los siguientes archivos para realizar la implementación correctamente:
@@ -98,8 +89,8 @@ Tienes acceso completo para leer y escribir archivos en el sistema de archivos d
 /home/user/studio/public/configuracion_proyecto.txt:
 
 Uso: Este archivo contiene la configuración esencial para aplicar estilos y entender la estructura del proyecto. Debes parsear este archivo para obtener:
-Ruta de tailwind.config.ts: Consulta este archivo para conocer la paleta de colores personalizada (theme.extend.colors), espaciado, breakpoints (theme.screens), configuraciones de tipografía, etc. Utiliza estas definiciones para aplicar estilos con clases de Tailwind.
-Ruta de src/app/globals.css: Revisa este archivo para las variables CSS globales (especialmente las de ShadCN UI mapeadas a la paleta personalizada, como --primary, --background) y cualquier clase CSS global personalizada. Utiliza estas variables/clases cuando sea apropiado (a menudo a través de clases de utilidad de Tailwind como bg-primary, text-foreground).
+Ruta de tailwind.config.ts: **Consulta este archivo OBLIGATORIAMENTE para conocer la paleta de colores personalizada (theme.extend.colors), espaciado, breakpoints (theme.screens), configuraciones de tipografía, etc. UTILIZA estas definiciones para aplicar estilos con clases de Tailwind.**
+Ruta de src/app/globals.css: **Revisa este archivo OBLIGATORIAMENTE para las variables CSS globales (especialmente las de ShadCN UI mapeadas a la paleta personalizada, como --primary, --background) y cualquier clase CSS global personalizada. UTILIZA estas variables/clases cuando sea apropiado (a menudo a través de clases de utilidad de Tailwind como bg-primary, text-foreground).**
 Alias de directorios (aliases del snippet components.json): Utiliza estos alias (ej: @/components, @/lib/utils, @/hooks, @/ui) para todas las rutas de importación de componentes, utilidades, hooks, etc. al modificar o crear archivos .tsx.
 /home/user/studio/public/estructura_proyecto.json:
 
@@ -121,34 +112,34 @@ ${htmlCode || '[Por favor, pega el código HTML aquí]'}
 Nota: Si el archivo de destino o el nuevo archivo es .tsx (React/Next.js), DEBES convertir y adaptar este HTML a sintaxis JSX válida.
 
 Instrucciones de Estilo y Adaptación (Cómo Implementar los Estilos):
-DEBES aplicar estilos activamente al elemento integrado utilizando EXCLUSIVAMENTE las utilidades de Tailwind CSS y las clases/variables definidas en src/app/globals.css, consultando tailwind.config.ts para la configuración personalizada. No introduzcas estilos inline (style="...") ni nuevas clases CSS globales personalizadas.
+**DEBES aplicar estilos activamente al elemento integrado utilizando EXCLUSIVAMENTE las utilidades de Tailwind CSS y las clases/variables definidas en \`src/app/globals.css\`, consultando \`tailwind.config.ts\` (accesible vía \`/home/user/studio/public/configuracion_proyecto.txt\`) para la configuración personalizada. NO introduzcas estilos inline (\`style="..."\`) ni nuevas clases CSS globales personalizadas. NO hay instrucciones de estilo explícitas del usuario; debes derivar los estilos apropiados del contexto del proyecto.**
 
-Implementa los estilos basándote en estas instrucciones específicas, traduciéndolas a clases de Tailwind y/o referencias a variables CSS globales:
-${formattedStyleInstructionsList || '* [No se proporcionaron instrucciones de estilo específicas]'}
+Como parte de la implementación de estilos, DEBES asegurar que el elemento:
 
-Además, como parte de la implementación de estilos, DEBES asegurar que el elemento:
-
-Se vea visualmente integrado y consistente con el diseño general del proyecto, utilizando los colores, tipografía y espaciado de la paleta definida en Tailwind y globals.css.
+**Se vea visualmente integrado y consistente con el diseño general del proyecto, utilizando los colores, tipografía y espaciado de la paleta definida en Tailwind y \`globals.css\` (obtenidos de \`/home/user/studio/public/configuracion_proyecto.txt\`).**
 Utilice las clases de utilidad de Tailwind para layout (flex, grid), dimensiones, espaciado, tipografía, bordes, sombras, etc.
 Haga uso de las variables CSS globales (--primary, --background, --radius, etc.) según corresponda, generalmente a través de las clases de utilidad de Tailwind (ej: text-primary, bg-card).
 Sea completamente responsivo y se adapte correctamente a diferentes tamaños de pantalla, utilizando las utilidades responsivas de Tailwind (ej: sm:, md:, lg:) para ajustar layout, tamaño de fuente, espaciado, etc.
 PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
 
-1.  Análisis de Contexto: Lee y procesa a fondo /home/user/studio/public/configuracion_proyecto.txt y /home/user/studio/public/estructura_proyecto.json para tener clara la configuración de estilos (Tailwind, CSS global, variables) y la estructura de archivos (rutas, directorios de componentes/páginas).
+1.  Análisis de Contexto: Lee y procesa a fondo \`/home/user/studio/public/configuracion_proyecto.txt\` y \`/home/user/studio/public/estructura_proyecto.json\` para tener clara la configuración de estilos (Tailwind, CSS global, variables) y la estructura de archivos (rutas, directorios de componentes/páginas).
 2.  Preparación de Archivos:
     *   Si el "Tipo de Elemento" es "Componente" o "Sección" y el archivo de destino es .tsx (como es típico en este proyecto Next.js), DEBES crear un nuevo archivo .tsx para el componente/sección. Nómbralo de forma descriptiva usando el "Nombre Específico" (ej: src/components/sections/${componentSpecificName || 'NombreEspecifico'}.tsx) y utiliza la estructura de carpetas de estructura_proyecto.json como guía.
     *   Si el "Tipo de Elemento" es "Página", el archivo a modificar/crear es directamente el "Archivo/Página de Destino" especificado.
     *   Si solo se modifica un archivo existente (no se crea un nuevo componente/página separado), abre el "Archivo/Página de Destino".
 3.  Implementación del Código y Estilos (Modificación/Creación):
     *   Toma el "Código HTML Base".
-    *   APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), siguiendo las "Instrucciones de Estilo y Adaptación" y la configuración del proyecto. Asegura que la responsividad se implemente en este paso.
+    *   **APLICA INMEDIATAMENTE las clases de Tailwind y las referencias a variables/clases CSS globales directamente en el código del elemento (adaptado a JSX si aplica), basándote en el contexto del proyecto obtenido de los archivos de configuración (\`/home/user/studio/public/configuracion_proyecto.txt\`). Asegura que la responsividad se implemente en este paso.**
     *   Si creaste un nuevo archivo .tsx para un componente/sección, coloca el código implementado con estilos dentro de la estructura de un componente React funcional.
     *   Si el "Tipo de Elemento" es "Página", coloca el código implementado en el archivo de destino (el nuevo o el existente).
 4.  Integración en el Archivo de Destino:
-    *   Si creaste un nuevo archivo de componente/sección (.tsx), DEBES añadir una sentencia import para este nuevo componente en la parte superior del "Archivo/Página de Destino" (utiliza los alias definidos, ej: import ${componentSpecificName || 'MyComponent'} from '@/components/sections/${componentSpecificName || 'MyComponent'}';).
-    *   DEBES insertar el código del elemento (si modificaste el archivo directamente) o la referencia al nuevo componente (<${componentSpecificName || 'MyComponent'} />) en la "Ubicación de Inserción" especificada dentro del "Archivo/Página de Destino".
+    *   Si creaste un nuevo archivo de componente/sección (.tsx), DEBES añadir una sentencia \`import\` para este nuevo componente en la parte superior del "Archivo/Página de Destino" (utiliza los alias definidos, ej: \`import ${componentSpecificName || 'MyComponent'} from '@/components/sections/${componentSpecificName || 'MyComponent'}';\`).
+    *   DEBES insertar el código del elemento (si modificaste el archivo directamente) o la referencia al nuevo componente (\`<${componentSpecificName || 'MyComponent'} />\`) en la "Ubicación de Inserción" especificada dentro del "Archivo/Página de Destino".
 5.  Verificación y Limpieza: Revisa el archivo modificado/creado para asegurar que las importaciones sean correctas, la sintaxis sea válida (JSX si es .tsx), y no haya estilos inline o clases CSS globales innecesarias.
-6.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.`;
+6.  GUARDAR CAMBIOS: CONFIRMA que has guardado todos los archivos modificados o creados en el sistema de archivos del proyecto. Esta es una acción esencial.
+
+FIN DEL PROMPT`;
+
 
     setGeneratedPrompt(prompt);
   }, [formData]);
@@ -261,19 +252,7 @@ PLAN DE IMPLEMENTACIÓN DETALLADO (Pasos que DEBES Ejecutar Secuencialmente):
                 onChange={handleInputChange}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="styleInstructions">
-                Styling Instructions (one per line)
-              </Label>
-              <Textarea
-                id="styleInstructions"
-                name="styleInstructions"
-                placeholder="Use Tailwind flexbox for centering.\nApply .btn-primary to the button.\nAdd p-4 Tailwind padding."
-                value={formData.styleInstructions}
-                onChange={handleInputChange}
-                rows={5}
-              />
-            </div>
+            {/* Removed Styling Instructions Label and Textarea */}
           </CardContent>
           <CardFooter>
             <Button onClick={generatePrompt} className="w-full">
