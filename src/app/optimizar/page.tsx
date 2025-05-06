@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, type FC } from 'react';
-import { Copy } from 'lucide-react';
+import { Copy, Check } from 'lucide-react'; // Import Check icon
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Keep Input if needed elsewhere, but Textarea is primary focus
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox component
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,18 +30,40 @@ import { useToast } from '@/hooks/use-toast';
 interface FormData {
   targetFile: string; // The file to optimize/modify
   modificationType: 'Optimizar Código' | 'Optimizar Estilo' | 'Añadir CSS Específico' | 'Añadir Importación' | 'Añadir Dependencia/Plugin' | ''; // Type of modification
-  specificInstructions: string; // Details for the modification
-  // Removed fields related to new component creation (componentType, componentSpecificName, htmlCode, destinationDirectory, integrationTarget)
+  specificInstructions: string; // Details for the modification (will be populated by checkboxes + custom input)
 }
 
-// Mapping for dynamic placeholders
-const instructionPlaceholders: Record<FormData['modificationType'], string> = {
-    '': 'Selecciona un tipo de modificación para ver ejemplos...',
-    'Optimizar Código': "Ej:\n- Refactorizar la función 'fetchData' para usar async/await.\n- Simplificar la lógica condicional en el componente X.\n- Eliminar console.log innecesarios.",
-    'Optimizar Estilo': "Ej:\n- Reemplazar márgenes fijos con utilidades de Tailwind (p.ej., m-4, p-2).\n- Asegurar consistencia en el uso de colores primarios (bg-primary, text-primary).\n- Mejorar la responsividad en pantallas 'md' para la tabla de datos.",
-    'Añadir CSS Específico': "Ej:\n- Añadir en src/app/globals.css:\n.mi-clase-especial {\n  @apply text-accent font-semibold;\n}\n- Modificar la regla '.card-title' en globals.css para aumentar el tamaño de fuente.",
-    'Añadir Importación': "Ej:\n- Añadir `import { useState, useEffect } from 'react';` al inicio del archivo.\n- Importar `import { Card } from '@/components/ui/card';` donde se necesite.",
-    'Añadir Dependencia/Plugin': "Ej:\n- Añadir `axios` a package.json: `npm install axios`.\n- Instalar y configurar `react-hook-form` siguiendo su documentación.",
+// --- Structured Suggestion Data ---
+const suggestionData: Record<Exclude<FormData['modificationType'], ''>, string[]> = {
+    'Optimizar Código': [
+        "Refactorizar la función 'fetchData' para usar async/await.",
+        "Simplificar la lógica condicional en el componente X.",
+        "Eliminar console.log innecesarios.",
+        "Mejorar manejo de errores en la función Y.",
+        "Utilizar memoización para optimizar el renderizado del componente Z.",
+    ],
+    'Optimizar Estilo': [
+        "Reemplazar márgenes fijos con utilidades de Tailwind (m-4, p-2).",
+        "Asegurar consistencia en el uso de colores primarios (bg-primary, text-primary).",
+        "Mejorar la responsividad en pantallas 'md' para la tabla de datos.",
+        "Unificar el tamaño de fuente para los títulos de sección.",
+        "Aplicar variables de color CSS (--*) en lugar de valores hardcodeados.",
+    ],
+    'Añadir CSS Específico': [
+        "Añadir en src/app/globals.css: .mi-clase-especial { @apply text-accent font-semibold; }",
+        "Modificar la regla '.card-title' en globals.css para aumentar tamaño de fuente.",
+        "Crear una nueva regla CSS para un efecto hover específico.",
+    ],
+    'Añadir Importación': [
+        "Añadir `import { useState, useEffect } from 'react';` al inicio del archivo.",
+        "Importar `import { Card } from '@/components/ui/card';` donde se necesite.",
+        "Importar hook personalizado: `import useCustomHook from '@/hooks/useCustomHook';`",
+    ],
+    'Añadir Dependencia/Plugin': [
+        "Añadir `axios` a package.json: `npm install axios`.",
+        "Instalar y configurar `react-hook-form` siguiendo su documentación.",
+        "Añadir `date-fns` para formateo de fechas: `npm install date-fns`.",
+    ],
 };
 
 
@@ -90,10 +113,10 @@ const OptimizarPage: FC = () => {
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
   const [filePaths, setFilePaths] = useState<ComboboxOption[]>([]); // State for file paths (target files)
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state for file paths
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, boolean>>({}); // State for checkbox selections { suggestionText: isChecked }
   const { toast } = useToast();
 
   // Fetch and process project structure on component mount
-  // This is needed to populate the list of files that can be optimized/modified
   useEffect(() => {
     const fetchAndProcessStructure = async () => {
       setIsLoadingPaths(true);
@@ -128,12 +151,14 @@ const OptimizarPage: FC = () => {
 
 
   // --- UPDATED Input Handlers for Optimization Form ---
+  // Handler for the Textarea (allows manual editing alongside checkbox selections)
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const { name, value } = e.target;
-      // Handle only the specificInstructions textarea
       if (name === 'specificInstructions') {
          setFormData((prev) => ({ ...prev, [name]: value }));
+         // Desync checkboxes if user types manually? For now, allow both.
+         // Or, could try to parse the text and update checkbox state, but complex.
       }
     },
     []
@@ -152,10 +177,28 @@ const OptimizarPage: FC = () => {
     setFormData((prev) => ({
       ...prev,
       modificationType: value,
-      // Optionally clear specific instructions when type changes
-      // specificInstructions: '',
+      specificInstructions: '', // Reset instructions when type changes
     }));
+    setSelectedSuggestions({}); // Reset checkbox selections
   }, []);
+
+  // Handler for Checkbox changes
+  const handleCheckboxChange = useCallback((suggestion: string, checked: boolean | 'indeterminate') => {
+    const newSelectedSuggestions = {
+        ...selectedSuggestions,
+        [suggestion]: checked === true,
+    };
+    setSelectedSuggestions(newSelectedSuggestions);
+
+    // Rebuild the specificInstructions string based on current selections
+    const currentSuggestions = formData.modificationType ? suggestionData[formData.modificationType] : [];
+    const instructions = currentSuggestions
+        .filter(s => newSelectedSuggestions[s]) // Get only checked suggestions
+        .join('\n'); // Join them with newline
+
+    setFormData(prev => ({ ...prev, specificInstructions: instructions }));
+
+  }, [selectedSuggestions, formData.modificationType]);
 
 
   // --- UPDATED generatePrompt function to create Optimization Prompt ---
@@ -252,6 +295,8 @@ FIN DEL PROMPT`;
     );
   }, [generatedPrompt, toast]);
 
+  const currentSuggestions = formData.modificationType ? suggestionData[formData.modificationType] : [];
+
   // --- UPDATED JSX structure for Optimization Form ---
   return (
     <div id="optimizar-page-container" className="container mx-auto p-4 md:p-8 flex flex-col">
@@ -313,28 +358,54 @@ FIN DEL PROMPT`;
               </Select>
             </div>
 
+            {/* Suggestions Checkboxes */}
+            {formData.modificationType && currentSuggestions.length > 0 && (
+                <div className="space-y-3 pt-2">
+                    <Label>Sugerencias (marca las que apliquen):</Label>
+                    <div className="space-y-2 rounded-md border p-3 max-h-48 overflow-y-auto">
+                        {currentSuggestions.map((suggestion, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={`suggestion-${index}`}
+                                    checked={selectedSuggestions[suggestion] || false}
+                                    onCheckedChange={(checked) => handleCheckboxChange(suggestion, checked)}
+                                />
+                                <label
+                                    htmlFor={`suggestion-${index}`}
+                                    className="text-sm font-mono cursor-pointer"
+                                >
+                                    {suggestion}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+
             {/* Specific Instructions Textarea */}
             <div id="optimizar-instructions-input-group" className="space-y-2">
               <Label htmlFor="specificInstructions">
-                Instrucciones/Detalles Específicos
+                Instrucciones Específicas (Combinadas o Personalizadas)
               </Label>
               <Textarea
                 id="specificInstructions"
                 name="specificInstructions"
-                placeholder={instructionPlaceholders[formData.modificationType || '']}
+                placeholder={formData.modificationType ? "Edita las instrucciones seleccionadas o añade detalles adicionales..." : "Selecciona un tipo de modificación para ver sugerencias."}
                 value={formData.specificInstructions}
                 onChange={handleInputChange}
-                rows={8} // Give more space for instructions
+                rows={6} // Adjusted rows
                 className="font-mono text-sm"
+                disabled={!formData.modificationType} // Disable if no type is selected
               />
               <p className="text-xs text-muted-foreground pt-1">
-                Provide clear and specific details based on the "Tipo de Modificación" selected.
+                 Puedes editar las sugerencias seleccionadas o añadir instrucciones manuales aquí.
               </p>
             </div>
 
           </CardContent>
           <CardFooter id="optimizar-input-card-footer">
-            <Button onClick={generatePrompt} className="w-full" disabled={isLoadingPaths}>
+            <Button onClick={generatePrompt} className="w-full" disabled={isLoadingPaths || !formData.modificationType}>
                {isLoadingPaths ? 'Loading Files...' : 'Generate Optimization Prompt'}
             </Button>
           </CardFooter>
@@ -380,3 +451,4 @@ FIN DEL PROMPT`;
 };
 
 export default OptimizarPage; // Export the new page component
+
