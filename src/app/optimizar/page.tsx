@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useCallback, useEffect, type FC } from 'react';
-import { Copy, Check } from 'lucide-react'; // Import Check icon
+import { Copy } from 'lucide-react'; // Keep Copy icon
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,44 +25,106 @@ import { Checkbox } from '@/components/ui/checkbox'; // Import Checkbox componen
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { useToast } from '@/hooks/use-toast';
 
+// --- Define Level Type ---
+type TargetLevel = 'Página' | 'Sección' | 'Componente' | '';
+
 // --- UPDATED FormData interface for Optimization ---
 interface FormData {
   targetFile: string; // The file to optimize/modify
+  targetLevel: TargetLevel; // NEW: The level of the target (Page, Section, Component)
   modificationType: 'Optimizar Código' | 'Optimizar Estilo' | 'Añadir CSS Específico' | 'Añadir Importación' | 'Añadir Dependencia/Plugin' | ''; // Type of modification
   specificInstructions: string; // Details for the modification (will be populated by checkboxes + custom input)
 }
 
-// --- Structured Suggestion Data ---
-const suggestionData: Record<Exclude<FormData['modificationType'], ''>, string[]> = {
-    'Optimizar Código': [
-        "Refactorizar la función 'fetchData' para usar async/await.",
-        "Simplificar la lógica condicional en el componente X.",
-        "Eliminar console.log innecesarios.",
-        "Mejorar manejo de errores en la función Y.",
-        "Utilizar memoización para optimizar el renderizado del componente Z.",
-    ],
-    'Optimizar Estilo': [
-        "Reemplazar márgenes fijos con utilidades de Tailwind (m-4, p-2).",
-        "Asegurar consistencia en el uso de colores primarios (bg-primary, text-primary).",
-        "Mejorar la responsividad en pantallas 'md' para la tabla de datos.",
-        "Unificar el tamaño de fuente para los títulos de sección.",
-        "Aplicar variables de color CSS (--*) en lugar de valores hardcodeados.",
-    ],
-    'Añadir CSS Específico': [
-        "Añadir en src/app/globals.css: .mi-clase-especial { @apply text-accent font-semibold; }",
-        "Modificar la regla '.card-title' en globals.css para aumentar tamaño de fuente.",
-        "Crear una nueva regla CSS para un efecto hover específico.",
-    ],
-    'Añadir Importación': [
-        "Añadir `import { useState, useEffect } from 'react';` al inicio del archivo.",
-        "Importar `import { Card } from '@/components/ui/card';` donde se necesite.",
-        "Importar hook personalizado: `import useCustomHook from '@/hooks/useCustomHook';`",
-    ],
-    'Añadir Dependencia/Plugin': [
-        "Añadir `axios` a package.json: `npm install axios`.",
-        "Instalar y configurar `react-hook-form` siguiendo su documentación.",
-        "Añadir `date-fns` para formateo de fechas: `npm install date-fns`.",
-    ],
+// --- Structured Suggestion Data by Level and Type ---
+const suggestionDataByLevel: Record<Exclude<TargetLevel, ''>, Record<Exclude<FormData['modificationType'], ''>, string[]>> = {
+    'Página': {
+        'Optimizar Código': [
+            "Refactorizar lógica de obtención de datos (fetch) para usar Server Actions o Route Handlers si aplica.",
+            "Optimizar el uso de `useState` y `useEffect` para evitar re-renders innecesarios.",
+            "Dividir la página en componentes más pequeños si se vuelve muy compleja.",
+            "Mejorar el manejo de estados de carga y error para la página completa.",
+            "Asegurar que los metadatos de la página (SEO) estén correctamente configurados.",
+            "Optimizar llamadas a API o base de datos realizadas desde la página.",
+        ],
+        'Optimizar Estilo': [
+            "Asegurar consistencia del layout principal (padding, max-width) con otras páginas.",
+            "Verificar la responsividad general de la página en todos los breakpoints (sm, md, lg, xl).",
+            "Garantizar que los colores y tipografía sigan el tema global definido en `globals.css`.",
+            "Revisar uso de sombras y bordes para consistencia visual.",
+            "Optimizar la carga de fuentes o imágenes grandes específicas de la página.",
+        ],
+        'Añadir CSS Específico': [
+            "Añadir en `globals.css`: `.page-wrapper-${/* nombre-unico */} { /* estilos específicos */ }`", // Sugerencia más general
+            "Modificar una regla CSS existente en `globals.css` que afecte el layout de la página.",
+        ],
+        'Añadir Importación': [
+            "Importar `Link` de `next/link` para navegación interna.",
+            "Añadir `import { Metadata } from 'next';` para configurar metadatos.",
+            "Importar un hook global: `import useAnalytics from '@/hooks/useAnalytics';`",
+            "Importar componentes de layout: `import { PageLayout } from '@/components/layout/PageLayout';`",
+        ],
+        'Añadir Dependencia/Plugin': [
+            "Instalar `next-seo` para manejo avanzado de SEO: `npm install next-seo`.",
+            "Añadir `framer-motion` para animaciones a nivel de página: `npm install framer-motion`.",
+        ],
+    },
+    'Sección': {
+        'Optimizar Código': [
+            "Refactorizar la lógica interna de la sección para mayor claridad.",
+            "Optimizar el renderizado condicional dentro de la sección.",
+            "Asegurar que las props de la sección estén bien tipadas (TypeScript).",
+            "Extraer lógica compleja a hooks personalizados si es necesario.",
+            "Mejorar la performance si la sección realiza cálculos intensivos.",
+        ],
+        'Optimizar Estilo': [
+            "Asegurar que la sección use `padding` y `margin` de Tailwind consistentemente.",
+            "Verificar la responsividad de la sección en sí misma.",
+            "Usar colores (`bg-`, `text-`, `border-`) del tema (primary, secondary, accent, etc.).",
+            "Aplicar `border-radius` según las variables del tema (`rounded-lg`, `rounded-md`).",
+            "Simplificar selectores CSS si se añadió CSS específico anteriormente.",
+        ],
+        'Añadir CSS Específico': [
+            "Añadir en `globals.css`: `.section-${/* nombre-unico */} { /* estilos específicos */ }`",
+            "Crear una variante específica para esta sección en `tailwind.config.ts` (si es complejo).",
+        ],
+        'Añadir Importación': [
+            "Importar componentes UI de `@/components/ui` (Button, Card, etc.).",
+            "Importar iconos de `lucide-react`.",
+            "Importar `Image` de `next/image` para optimización de imágenes dentro de la sección.",
+            "Importar `cn` de `@/lib/utils` para clases condicionales.",
+        ],
+        'Añadir Dependencia/Plugin': [
+             "Instalar `embla-carousel-react` si se necesita un carrusel dentro de la sección: `npm install embla-carousel-react`.",
+             "Añadir `react-intersection-observer` para animaciones al hacer scroll: `npm install react-intersection-observer`.",
+        ],
+    },
+    'Componente': {
+        'Optimizar Código': [
+            "Simplificar la lógica del componente al mínimo indispensable.",
+            "Utilizar `React.memo` si el componente es puro y recibe las mismas props frecuentemente.",
+            "Asegurar que el componente sea lo más reutilizable posible.",
+            "Tipar correctamente las props del componente.",
+            "Optimizar el manejo de eventos (e.g., `onClick`, `onChange`).",
+        ],
+        'Optimizar Estilo': [
+            "Usar exclusivamente clases de Tailwind para estilizar el componente.",
+            "Asegurar que el componente herede colores y fuentes del tema o permita personalización vía props/clases.",
+            "Verificar que el componente no tenga márgenes/paddings fijos que dificulten su composición.",
+            "Hacer el componente adaptable a diferentes contextos (tamaños de contenedor).",
+        ],
+        'Añadir CSS Específico': [
+            "Evitar añadir CSS específico para componentes; preferir Tailwind o CSS Modules si es estrictamente necesario.",
+        ],
+        'Añadir Importación': [
+            "Importar tipos necesarios: `import type { FC } from 'react';`",
+            "Importar `cn` de `@/lib/utils`.",
+            "Importar otros componentes UI necesarios.",
+        ],
+        'Añadir Dependencia/Plugin': [
+            "Evitar añadir dependencias directamente a componentes pequeños; gestionar dependencias a nivel de página/layout.",
+        ],
+    },
 };
 
 
@@ -107,6 +168,7 @@ const OptimizarPage: FC = () => {
   // --- UPDATED State for Optimization Form ---
   const [formData, setFormData] = useState<FormData>({
     targetFile: '',
+    targetLevel: '', // Initialize level
     modificationType: '',
     specificInstructions: '',
   });
@@ -115,6 +177,9 @@ const OptimizarPage: FC = () => {
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true); // Loading state for file paths
   const [selectedSuggestions, setSelectedSuggestions] = useState<Record<string, boolean>>({}); // State for checkbox selections { suggestionText: isChecked }
   const { toast } = useToast();
+
+  // --- Level Options ---
+  const levelOptions: TargetLevel[] = ['Página', 'Sección', 'Componente'];
 
   // Fetch and process project structure on component mount
   useEffect(() => {
@@ -151,29 +216,34 @@ const OptimizarPage: FC = () => {
 
 
   // --- UPDATED Input Handlers for Optimization Form ---
-  // Handler for the Textarea (allows manual editing alongside checkbox selections)
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      if (name === 'specificInstructions') {
-         setFormData((prev) => ({ ...prev, [name]: value }));
-         // Desync checkboxes if user types manually? For now, allow both.
-         // Or, could try to parse the text and update checkbox state, but complex.
-      }
-    },
-    []
-  );
 
   // Handler for Target File Combobox change
   const handleTargetFileChange = useCallback((value: string) => {
       setFormData((prev) => ({
         ...prev,
         targetFile: value,
+        // Optionally, reset level and modification type if file changes?
+        // targetLevel: '',
+        // modificationType: '',
+        // specificInstructions: '',
       }));
+      // setSelectedSuggestions({}); // Reset suggestions if file changes
   }, []);
 
+  // NEW: Handler for Target Level Select change
+  const handleLevelChange = useCallback((value: TargetLevel) => {
+    setFormData(prev => ({
+      ...prev,
+      targetLevel: value,
+      modificationType: '', // Reset modification type when level changes
+      specificInstructions: '', // Reset instructions
+    }));
+    setSelectedSuggestions({}); // Reset checkbox selections
+  }, []);
+
+
   // Handler for Modification Type Select change
-  const handleModificationTypeChange = useCallback((value: FormData['modificationType']) => {
+  const handleModificationTypeChange = useCallback((value: Exclude<FormData['modificationType'], ''>) => {
     setFormData((prev) => ({
       ...prev,
       modificationType: value,
@@ -182,29 +252,54 @@ const OptimizarPage: FC = () => {
     setSelectedSuggestions({}); // Reset checkbox selections
   }, []);
 
-  // Handler for Checkbox changes
+
+  // Handler for Checkbox changes - Updated to use current suggestions
   const handleCheckboxChange = useCallback((suggestion: string, checked: boolean | 'indeterminate') => {
+    const isChecked = checked === true;
     const newSelectedSuggestions = {
         ...selectedSuggestions,
-        [suggestion]: checked === true,
+        [suggestion]: isChecked,
     };
     setSelectedSuggestions(newSelectedSuggestions);
 
     // Rebuild the specificInstructions string based on current selections
-    const currentSuggestions = formData.modificationType ? suggestionData[formData.modificationType] : [];
+    // Determine current suggestions based on level and type
+    let currentSuggestions: string[] = [];
+    if (formData.targetLevel && formData.modificationType) {
+        currentSuggestions = suggestionDataByLevel[formData.targetLevel]?.[formData.modificationType] ?? [];
+    }
+
     const instructions = currentSuggestions
         .filter(s => newSelectedSuggestions[s]) // Get only checked suggestions
         .join('\n'); // Join them with newline
 
     setFormData(prev => ({ ...prev, specificInstructions: instructions }));
 
-  }, [selectedSuggestions, formData.modificationType]);
+  }, [selectedSuggestions, formData.targetLevel, formData.modificationType]);
+
+
+  // Handler for the Textarea (allows manual editing alongside checkbox selections)
+   const handleInstructionsChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      if (name === 'specificInstructions') {
+         setFormData((prev) => ({ ...prev, [name]: value }));
+         // Optional: Desync checkboxes if user types manually, or try to sync (complex)
+         // A simple approach is to let the textarea override the checkboxes visually,
+         // but the prompt generation will use the textarea value.
+         // To be safe, maybe clear checkboxes when textarea is manually edited?
+         // setSelectedSuggestions({}); // Uncomment this line to clear checkboxes on manual edit
+      }
+    },
+    []
+  );
 
 
   // --- UPDATED generatePrompt function to create Optimization Prompt ---
   const generatePrompt = useCallback(() => {
     const {
       targetFile,
+      targetLevel, // Include level
       modificationType,
       specificInstructions,
     } = formData;
@@ -217,49 +312,44 @@ const OptimizarPage: FC = () => {
       .map((line) => ` * ${line}`)
       .join('\n');
 
-    // --- Optimization Prompt Template (based on user's provided structure) ---
+    // --- Optimization Prompt Template (Updated to include Level) ---
     const prompt = `INICIO DEL PROMPT PARA IA
 
-DIRECTIVA DE ACCIÓN INMEDIATA: OPTIMIZAR O MODIFICAR CÓDIGO EXISTENTE
+DIRECTIVA DE ACCIÓN INMEDIATA: OPTIMIZAR O MODIFICAR CÓDIGO EXISTENTE EN EL NIVEL ESPECIFICADO
 
-Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto (perceptible como "Firebase Studio" o similar). Tu función es actuar directamente sobre los archivos del proyecto para optimizar o modificar un elemento web existente (Componente, Sección o Página) según las especificaciones proporcionadas.
+Eres una IA con capacidades de modificación de código dentro del entorno de desarrollo de este proyecto. Tu función es actuar directamente sobre los archivos del proyecto para optimizar o modificar un elemento web existente según el nivel (Página, Sección, Componente) y las especificaciones proporcionadas.
 
 Procedimiento Requerido:
-Debes leer la información proporcionada sobre la tarea, consultar los archivos de contexto del proyecto para entender el entorno de desarrollo, y proceder a modificar los archivos necesarios para realizar la optimización o adición solicitada.
+Debes leer la información proporcionada, incluyendo el nivel del objetivo, consultar los archivos de contexto del proyecto, y proceder a modificar los archivos necesarios para realizar la optimización o adición solicitada.
 
 Uso del Contexto del Proyecto (Información Crítica para la Implementación):
-Tienes acceso completo para leer y escribir archivos en el sistema de archivos del proyecto. Es OBLIGATORIO que consultes y utilices la información de los siguientes archivos ubicados en public/ para realizar la implementación correctamente. Esta información te permitirá entender la configuración de estilos, la estructura de directorios, los alias y las convenciones del proyecto antes de realizar cualquier cambio.
+Tienes acceso completo para leer y escribir archivos en el sistema de archivos del proyecto. Es OBLIGATORIO que consultes y utilices la información de los siguientes archivos ubicados en public/ para realizar la implementación correctamente.
 /home/user/studio/public/configuracion_proyecto.txt: Contiene la configuración de Tailwind, rutas CSS globales, alias de directorios, etc.
 /home/user/studio/public/estructura_proyecto.json: Representa la estructura actual de directorios y archivos.
 
 Especificaciones de la Tarea (Información Proporcionada por el Usuario):
 
-Archivo/Elemento Objetivo: ${targetFile || '[Por favor, selecciona un archivo objetivo]'} (Esta es la ruta exacta del archivo que debes leer y modificar. Valida esta ruta usando estructura_proyecto.json).
+Archivo/Elemento Objetivo: ${targetFile || '[Por favor, selecciona un archivo objetivo]'} (Ruta exacta del archivo a leer y modificar).
+Nivel del Objetivo: ${targetLevel || '[Por favor, selecciona el nivel: Página, Sección o Componente]'} (Esto contextualiza la modificación).
 Tipo de Modificación: ${modificationType || '[Por favor, selecciona un tipo de modificación]'}
 Instrucciones/Detalles Específicos:
-${formattedSpecificInstructions || '[El contenido ingresado por el usuario en el área de texto para detalles. El formato y contenido dependerán del "Tipo de Modificación".]'}
-Si es Optimizar Código: Describe qué aspectos del código deben optimizarse (ej: "Refactorizar la lógica de manejo de estado", "Mejorar la eficiencia de la función X", "Limpiar código comentado").
-Si es Optimizar Estilo: Describe qué aspectos del estilo deben optimizarse (ej: "Asegurar que todo el espaciado use utilidades de Tailwind", "Limpiar clases CSS no utilizadas", "Mejorar la responsividad en tamaños medianos").
-Si es Añadir CSS Específico: Proporciona el código CSS exacto a añadir y especifica dónde debe ser añadido (ej: "Añadir estas reglas CSS en src/app/globals.css bajo el selector .mi-clase-personalizada", o "Modificar la regla CSS existente para .alguna-clase en globals.css para incluir estas propiedades"). Nota para la IA: Aunque se solicita CSS específico, siempre que sea posible, considera si la misma funcionalidad se puede lograr con utilidades de Tailwind o variables CSS globales existentes, y prioriza esa aproximación a menos que la instrucción sea muy específica.
-Si es Añadir Importación: Proporciona la sentencia import completa (ej: import { useState } from 'react'; o import { Button } from '@/components/ui/button';). Si es posible, indica en qué parte del archivo debe ir (ej: "al principio del componente principal", "dentro de un useEffect").
-Si es Añadir Dependencia/Plugin: Proporciona el nombre del paquete o plugin (ej: axios, react-query, @hookform/resolvers). Si se especifican, incluye la versión (ej: axios@^1.0.0). Si hay pasos de configuración inicial, descríbelos (ej: "Instalar axios", "Configurar QueryClientProvider en el layout principal").
+${formattedSpecificInstructions || '[Instrucciones detalladas basadas en el Nivel y Tipo de Modificación seleccionados, o texto manual.]'}
+[La IA debe interpretar estas instrucciones en el contexto del Nivel y Tipo seleccionados. Por ejemplo, "Optimizar Estilo" en una "Página" se refiere a la coherencia global, mientras que en un "Componente" se refiere a su encapsulamiento y reutilización.]
 
 PLAN DE IMPLEMENTACIÓN (Pasos que DEBES Ejecutar Secuencialmente en el Proyecto):
 Análisis del Archivo Objetivo: Lee el contenido actual del "Archivo/Elemento Objetivo" (${targetFile || '[Ruta del Archivo Objetivo]'}).
-Aplicación de la Modificación: Basándote en el "Tipo de Modificación" y las "Instrucciones/Detalles Específicos", realiza los cambios necesarios en el código del archivo objetivo.
-Si es Optimizar Código/Estilo: Modifica el código existente para aplicar las optimizaciones solicitadas, utilizando el contexto del proyecto (Tailwind, CSS global, alias) para guiar los cambios de estilo y estructura.
-Si es Añadir CSS Específico: Abre el archivo src/app/globals.css y añade o modifica las reglas CSS según las instrucciones.
-Si es Añadir Importación: Inserta la sentencia import proporcionada en la ubicación adecuada dentro del "Archivo/Elemento Objetivo", utilizando los alias (@/) si corresponden.
-Si es Añadir Dependencia/Plugin:
-Modifica el archivo package.json para añadir la nueva dependencia en la sección dependencies o devDependencies según corresponda.
-Si se especificaron pasos de configuración inicial, realiza las modificaciones necesarias en los archivos relevantes (ej: src/app/layout.tsx, archivos de configuración, etc.), utilizando los alias correctos.
-Ajustes Colaterales (Si Aplica): Si la modificación principal requiere ajustes en otras partes del código del archivo objetivo (ej: usar un hook recién importado, ajustar llamadas a API después de añadir axios), realiza esos ajustes.
-Verificación de Sintaxis y Coherencia: Revisa todos los archivos modificados (${targetFile ? `[${targetFile}]` : '[Ruta del Archivo Objetivo]'}, src/app/globals.css, package.json, etc.) para asegurar que la sintaxis sea correcta y que los cambios de estilo sean coherentes con el proyecto (usando Tailwind y CSS global según el contexto).
-GUARDAR CAMBIOS DEFINITIVAMENTE: CONFIRMA Y GUARDA todos los archivos modificados en el sistema de archivos del proyecto. Esta es una acción esencial.
-Reporte de Ejecución: Proporciona una lista clara de todos los archivos que fueron modificados durante esta tarea y describe brevemente la naturaleza del cambio en cada uno (ej: "Modificado src/components/sections/HeroSection.tsx para optimizar estilos y añadir importación de useInView. Modificado package.json para añadir axios.").
+Aplicación de la Modificación (Contextualizada por Nivel): Basándote en el "Nivel del Objetivo", el "Tipo de Modificación" y las "Instrucciones/Detalles Específicos", realiza los cambios necesarios en el código del archivo objetivo. Adapta tu enfoque según sea una Página, Sección o Componente.
+Si es Optimizar Código/Estilo: Aplica las optimizaciones solicitadas considerando el alcance (global para Página, encapsulado para Sección/Componente). Utiliza Tailwind y CSS global según el contexto.
+Si es Añadir CSS Específico: Añade o modifica reglas CSS en src/app/globals.css. Considera si es mejor usar Tailwind.
+Si es Añadir Importación: Inserta la sentencia import en la ubicación adecuada dentro del "Archivo/Elemento Objetivo", usando alias (@/).
+Si es Añadir Dependencia/Plugin: Modifica package.json y realiza configuraciones iniciales si se especificaron.
+Ajustes Colaterales (Si Aplica): Realiza ajustes necesarios derivados de la modificación principal.
+Verificación de Sintaxis y Coherencia: Revisa todos los archivos modificados asegurando sintaxis correcta y coherencia estilística con el proyecto.
+GUARDAR CAMBIOS DEFINITIVAMENTE: CONFIRMA Y GUARDA todos los archivos modificados en el sistema de archivos del proyecto.
+Reporte de Ejecución: Lista los archivos modificados y describe brevemente los cambios.
 
 Confirmación de Inicio:
-Confirma que has leído y entendido estas instrucciones, has accedido al contexto del proyecto, y procederás inmediatamente a ejecutar el plan de implementación modificando archivos en el proyecto.
+Confirma que has leído y entendido estas instrucciones, incluyendo el Nivel del Objetivo, has accedido al contexto del proyecto, y procederás inmediatamente a ejecutar el plan de implementación modificando archivos en el proyecto.
 
 FIN DEL PROMPT`;
     // --- End of Optimization Prompt Template ---
@@ -295,7 +385,11 @@ FIN DEL PROMPT`;
     );
   }, [generatedPrompt, toast]);
 
-  const currentSuggestions = formData.modificationType ? suggestionData[formData.modificationType] : [];
+  // --- Determine current suggestions based on level and type ---
+   let currentSuggestions: string[] = [];
+   if (formData.targetLevel && formData.modificationType) {
+       currentSuggestions = suggestionDataByLevel[formData.targetLevel]?.[formData.modificationType] ?? [];
+   }
 
   // --- UPDATED JSX structure for Optimization Form ---
   return (
@@ -337,16 +431,41 @@ FIN DEL PROMPT`;
                 </p>
             </div>
 
-            {/* Modification Type Select */}
+             {/* NEW: Target Level Select */}
+             <div id="optimizar-level-select-group" className="space-y-2">
+               <Label htmlFor="targetLevel">Nivel del Objetivo</Label>
+               <Select
+                 name="targetLevel"
+                 value={formData.targetLevel}
+                 onValueChange={handleLevelChange}
+                 disabled={!formData.targetFile} // Disable if no file is selected
+               >
+                 <SelectTrigger id="targetLevel" aria-label="Selecciona el nivel del objetivo">
+                   <SelectValue placeholder={!formData.targetFile ? "Selecciona un archivo primero" : "Selecciona Página, Sección o Componente"} />
+                 </SelectTrigger>
+                 <SelectContent>
+                   {levelOptions.map((level) => (
+                      <SelectItem key={level} value={level}>{level}</SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+                <p className="text-xs text-muted-foreground pt-1">
+                    Specify if the target is a whole Page, a Section within a page, or a reusable Component.
+                </p>
+             </div>
+
+
+            {/* Modification Type Select - Enabled only if level is selected */}
             <div id="optimizar-modification-type-select-group" className="space-y-2">
               <Label htmlFor="modificationType">Tipo de Modificación</Label>
               <Select
                 name="modificationType"
                 value={formData.modificationType}
-                onValueChange={handleModificationTypeChange}
+                onValueChange={(value) => handleModificationTypeChange(value as Exclude<FormData['modificationType'], ''>)}
+                disabled={!formData.targetLevel} // Disable if no level selected
               >
                 <SelectTrigger id="modificationType" aria-label="Selecciona el tipo de modificación">
-                  <SelectValue placeholder="Selecciona el tipo de modificación" />
+                  <SelectValue placeholder={!formData.targetLevel ? "Selecciona un nivel primero" : "Selecciona el tipo de modificación"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Optimizar Código">Optimizar Código</SelectItem>
@@ -358,21 +477,24 @@ FIN DEL PROMPT`;
               </Select>
             </div>
 
-            {/* Suggestions Checkboxes */}
-            {formData.modificationType && currentSuggestions.length > 0 && (
+            {/* Suggestions Checkboxes - Rendered conditionally */}
+            {formData.targetLevel && formData.modificationType && currentSuggestions.length > 0 && (
                 <div className="space-y-3 pt-2">
                     <Label>Sugerencias (marca las que apliquen):</Label>
-                    <div className="space-y-2 rounded-md border p-3 max-h-48 overflow-y-auto">
+                    {/* Scrollable container for suggestions */}
+                    <div className="space-y-2 rounded-md border p-3 max-h-48 overflow-y-auto bg-muted/50">
                         {currentSuggestions.map((suggestion, index) => (
-                            <div key={index} className="flex items-center space-x-2">
+                            <div key={`${formData.targetLevel}-${formData.modificationType}-${index}`} className="flex items-start space-x-2"> {/* Use more specific key */}
                                 <Checkbox
                                     id={`suggestion-${index}`}
                                     checked={selectedSuggestions[suggestion] || false}
                                     onCheckedChange={(checked) => handleCheckboxChange(suggestion, checked)}
+                                    aria-labelledby={`suggestion-label-${index}`} // Improve accessibility
                                 />
                                 <label
+                                    id={`suggestion-label-${index}`} // Corresponding label ID
                                     htmlFor={`suggestion-${index}`}
-                                    className="text-sm font-mono cursor-pointer"
+                                    className="text-sm font-mono cursor-pointer leading-snug" // Ensure readability
                                 >
                                     {suggestion}
                                 </label>
@@ -391,12 +513,18 @@ FIN DEL PROMPT`;
               <Textarea
                 id="specificInstructions"
                 name="specificInstructions"
-                placeholder={formData.modificationType ? "Edita las instrucciones seleccionadas o añade detalles adicionales..." : "Selecciona un tipo de modificación para ver sugerencias."}
+                placeholder={
+                    !formData.modificationType
+                      ? "Selecciona Nivel y Tipo de Modificación para ver sugerencias o escribir manualmente."
+                      : currentSuggestions.length > 0
+                        ? "Edita las instrucciones seleccionadas o añade detalles..."
+                        : "Escribe aquí instrucciones detalladas..."
+                }
                 value={formData.specificInstructions}
-                onChange={handleInputChange}
+                onChange={handleInstructionsChange} // Changed handler
                 rows={6} // Adjusted rows
                 className="font-mono text-sm"
-                disabled={!formData.modificationType} // Disable if no type is selected
+                disabled={!formData.modificationType} // Disable if no modification type is selected
               />
               <p className="text-xs text-muted-foreground pt-1">
                  Puedes editar las sugerencias seleccionadas o añadir instrucciones manuales aquí.
@@ -405,7 +533,12 @@ FIN DEL PROMPT`;
 
           </CardContent>
           <CardFooter id="optimizar-input-card-footer">
-            <Button onClick={generatePrompt} className="w-full" disabled={isLoadingPaths || !formData.modificationType}>
+            <Button
+                onClick={generatePrompt}
+                className="w-full"
+                // Disable button if essential fields are missing
+                disabled={isLoadingPaths || !formData.targetFile || !formData.targetLevel || !formData.modificationType || !formData.specificInstructions.trim()}
+              >
                {isLoadingPaths ? 'Loading Files...' : 'Generate Optimization Prompt'}
             </Button>
           </CardFooter>
@@ -451,4 +584,3 @@ FIN DEL PROMPT`;
 };
 
 export default OptimizarPage; // Export the new page component
-
