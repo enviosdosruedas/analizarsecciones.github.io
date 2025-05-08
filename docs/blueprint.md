@@ -1,4 +1,4 @@
-# **App Name**: PromptForge
+# **App Name**: GenerarPrompt
 
 ## Core Features:
 
