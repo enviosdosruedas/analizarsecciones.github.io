@@ -1,0 +1,117 @@
+{
+    "src": {
+      "__files__": [
+        "types.ts"
+      ],
+      "components": {
+        "__files__": [
+          "match-item.tsx",
+          "hero-principal.tsx",
+          "team-member-card.tsx"
+        ],
+        "ui": {
+          "__files__": [
+            "form.tsx",
+            "slider.tsx",
+            "table.tsx",
+            "toast.tsx",
+            "alert-dialog.tsx",
+            "scroll-area.tsx",
+            "separator.tsx",
+            "tooltip.tsx",
+            "radio-group.tsx",
+            "skeleton.tsx",
+            "sheet.tsx",
+            "input.tsx",
+            "badge.tsx",
+            "chart.tsx",
+            "progress.tsx",
+            "alert.tsx",
+            "popover.tsx",
+            "switch.tsx",
+            "toaster.tsx",
+            "select.tsx",
+            "calendar.tsx",
+            "button.tsx",
+            "sidebar.tsx",
+            "textarea.tsx",
+            "checkbox.tsx",
+            "accordion.tsx",
+            "avatar.tsx",
+            "tabs.tsx",
+            "card.tsx",
+            "menubar.tsx",
+            "label.tsx",
+            "dialog.tsx",
+            "dropdown-menu.tsx"
+          ]
+        },
+        "layout": {
+          "__files__": [
+            "main-nav.tsx",
+            "header.tsx",
+            "footer.tsx"
+          ]
+        }
+      },
+      "lib": {
+        "__files__": [
+          "utils.ts",
+          "placeholder-data.ts"
+        ]
+      },
+      "ai": {
+        "__files__": [
+          "dev.ts",
+          "genkit.ts"
+        ]
+      },
+      "hooks": {
+        "__files__": [
+          "use-mobile.tsx",
+          "use-toast.ts"
+        ]
+      },
+      "app": {
+        "__files__": [
+          "favicon.ico",
+          "page.tsx",
+          "layout.tsx",
+          "globals.css"
+        ],
+        "history": {
+          "__files__": [
+            "page.tsx"
+          ]
+        },
+        "team": {
+          "__files__": [
+            "page.tsx"
+          ]
+        },
+        "contact": {
+          "__files__": [
+            "page.tsx"
+          ]
+        },
+        "matches": {
+          "__files__": [
+            "page.tsx"
+          ],
+          "[id]": {
+            "__files__": [
+              "page.tsx"
+            ]
+          }
+        }
+      }
+    },
+    "public": {
+      "__files__": [
+        "Liberdad Escudo.jpg",
+        "Libertad.png",
+        "Logo.svg",
+        "HeroPrincipal.png"
+      ]
+    }
+  }
