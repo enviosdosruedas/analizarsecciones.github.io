@@ -1,212 +1,117 @@
 {
-  "public": {
-    "_auth": {
-      "experiments.js": null,
-      "handler.html": null,
-      "handler.js": null,
-      "iframe.html": null,
-      "iframe.js": null
-    },
-    "icon": {
-      "icon-facebook.svg": null,
-      "icon-gmail.svg": null,
-      "icon-instagram.svg": null,
-      "icon-whatsapp.svg": null
-    },
-    "img": {
-      "Emprendedoresbanner.webp": null,
-      "Emprendedoresbannerrapidas.webp": null,
-      "Emprendedoresbannerrapidas2.webp": null,
-      "Emprendedoresbannerrapidas3.webp": null,
-      "LogoEnviosDosRuedas-180.png": null,
-      "LogoEnviosDosRuedas-192.png": null,
-      "LogoEnviosDosRuedas-32.png": null,
-      "LogoEnviosDosRuedas.png": null,
-      "LogoEnviosDosRuedas.webp": null,
-      "android-chrome-192x192.png": null,
-      "android-chrome-512x512.png": null,
-      "apple-touch-icon.png": null,
-      "favicon-16x16.png": null,
-      "favicon-96x96.png": null,
-      "favicon.ico": null,
-      "favicon.svg": null,
-      "web-app-manifest-512x512.png": null
-    },
-    "Emprendedoresbanner.webp": null,
-    "Emprendedoresbannerrapidas.webp": null,
-    "Emprendedoresbannerrapidas2.webp": null,
-    "Emprendedoresbannerrapidas3.webp": null,
-    "LogoEnviosDosRuedas-180.png": null,
-    "LogoEnviosDosRuedas-192.png": null,
-    "LogoEnviosDosRuedas-32.png": null,
-    "LogoEnviosDosRuedas.png": null,
-    "LogoEnviosDosRuedas.webp": null,
-    "android-chrome-192x192.png": null,
-    "android-chrome-512x512.png": null,
-    "apple-touch-icon.png": null,
-    "favicon-16x16.png": null,
-    "favicon-96x96.png": null,
-    "favicon.ico": null,
-    "favicon.svg": null,
-    "web-app-manifest-512x512.png": null
-  },
   "src": {
-    "ai": {
-      "ai-instance.ts": null,
-      "dev.ts": null
-    },
-    "app": {
-      "CotizadorNuevo": {
-        "page.tsx": null
-      },
-      "contacto": {
-        "page.tsx": null
-      },
-      "cotizador-envios-express": {
-        "page.tsx": null
-      },
-      "cotizador-envios-lowcost": {
-        "page.tsx": null
-      },
-      "delivery-moto-express": {
-        "page.tsx": null
-      },
-      "delivery-moto-fija": {
-        "page.tsx": null
-      },
-      "envios-emprendedores": {
-        "page.tsx": null
-      },
-      "enviosflex": {
-        "page.tsx": null
-      },
-      "mensajeria-envios-express": {
-        "page.tsx": null
-      },
-      "mensajeria-envios-lowcost": {
-        "page.tsx": null
-      },
-      "nuestrasredes": {
-        "page.tsx": null
-      },
-      "preguntasfrecuentes": {
-        "page.tsx": null
-      },
-      "sobre-nosotros": {
-        "page.tsx": null
-      },
-      "favicon.ico": null,
-      "globals.css": null,
-      "layout.tsx": null,
-      "page.tsx": null
-    },
+    "__files__": [
+      "types.ts"
+    ],
     "components": {
-      "layout": {
-        "footer.tsx": null,
-        "header.tsx": null
-      },
-      "sections": {
-        "BusquedaFaq.tsx": null,
-        "CancelacionDeliveyMotoFija.tsx": null,
-        "CaracteristicasDeliveyMotoFija.tsx": null,
-        "CoberturaDeliveyMotoExpress.tsx": null,
-        "ComenzarEmprendedores.tsx": null,
-        "CompromisoDeliveyMotoFija.tsx": null,
-        "CompromisoEmprendedores.tsx": null,
-        "CompromisoEnviosFlex.tsx": null,
-        "ContactMenEnvLowCost.tsx": null,
-        "ContactoDeliveyMotoExpress.tsx": null,
-        "ContactoDeliveyMotoFija.tsx": null,
-        "ContactoEnviosFlex.tsx": null,
-        "CotizarEnviosExpresForm.tsx": null,
-        "EmprendedorContacto.tsx": null,
-        "ExpressPrioritario.tsx": null,
-        "GuiaDeliveyMotoFija.tsx": null,
-        "HeroContacto.tsx": null,
-        "HeroDeliveyMotoExpress.tsx": null,
-        "HeroDeliveyMotoFija.tsx": null,
-        "HeroEmprendedores.tsx": null,
-        "HeroEnviosFlex.tsx": null,
-        "HeroFaq.tsx": null,
-        "HeroMenEnvExpress.tsx": null,
-        "HeroMenEnvLowCost.tsx": null,
-        "HeroNosotros.tsx": null,
-        "HeroNuestrasRedes.tsx": null,
-        "InfoContacto.tsx": null,
-        "InfoEmprendedores.tsx": null,
-        "InfoEnviosFlex.tsx": null,
-        "ListoEmprendedores.tsx": null,
-        "MasInfoDeliveyMotoExpress.tsx": null,
-        "MasPreguntas.tsx": null,
-        "PasosServicios.tsx": null,
-        "PrecioEmprendedores.tsx": null,
-        "PreciosEnviosFlex.tsx": null,
-        "PreciosMenEnvLowCost.tsx": null,
-        "PrincipalEnviosFlex.tsx": null,
-        "Principalcontacto.tsx": null,
-        "RecomendacionesEmprendedores.tsx": null,
-        "RecomendacionesEnviosFlex.tsx": null,
-        "Resumenmensajeriaenviosexpress.tsx": null,
-        "ZonadeCobertura.tsx": null,
-        "banner-redes-sociales.tsx": null,
-        "cotizar-principal.tsx": null,
-        "emprendedores-principal.tsx": null,
-        "faqmenenvexpress.tsx": null,
-        "hero-section.tsx": null,
-        "info-emprendedores.tsx": null,
-        "precio-emprendedores.tsx": null,
-        "service-overview.tsx": null,
-        "servicios-destacados.tsx": null,
-        "vision-global.tsx": null
-      },
+      "__files__": [
+        "match-item.tsx",
+        "hero-principal.tsx",
+        "team-member-card.tsx"
+      ],
       "ui": {
-        "accordion.tsx": null,
-        "alert-dialog.tsx": null,
-        "alert.tsx": null,
-        "avatar.tsx": null,
-        "badge.tsx": null,
-        "button.tsx": null,
-        "calendar.tsx": null,
-        "card.tsx": null,
-        "carousel.tsx": null,
-        "chart.tsx": null,
-        "checkbox.tsx": null,
-        "dialog.tsx": null,
-        "dropdown-menu.tsx": null,
-        "form.tsx": null,
-        "input.tsx": null,
-        "label.tsx": null,
-        "menubar.tsx": null,
-        "popover.tsx": null,
-        "progress.tsx": null,
-        "radio-group.tsx": null,
-        "scroll-area.tsx": null,
-        "select.tsx": null,
-        "separator.tsx": null,
-        "sheet.tsx": null,
-        "sidebar.tsx": null,
-        "skeleton.tsx": null,
-        "slider.tsx": null,
-        "switch.tsx": null,
-        "table.tsx": null,
-        "tabs.tsx": null,
-        "textarea.tsx": null,
-        "toast.tsx": null,
-        "toaster.tsx": null,
-        "tooltip.tsx": null
+        "__files__": [
+          "form.tsx",
+          "slider.tsx",
+          "table.tsx",
+          "toast.tsx",
+          "alert-dialog.tsx",
+          "scroll-area.tsx",
+          "separator.tsx",
+          "tooltip.tsx",
+          "radio-group.tsx",
+          "skeleton.tsx",
+          "sheet.tsx",
+          "input.tsx",
+          "badge.tsx",
+          "chart.tsx",
+          "progress.tsx",
+          "alert.tsx",
+          "popover.tsx",
+          "switch.tsx",
+          "toaster.tsx",
+          "select.tsx",
+          "calendar.tsx",
+          "button.tsx",
+          "sidebar.tsx",
+          "textarea.tsx",
+          "checkbox.tsx",
+          "accordion.tsx",
+          "avatar.tsx",
+          "tabs.tsx",
+          "card.tsx",
+          "menubar.tsx",
+          "label.tsx",
+          "dialog.tsx",
+          "dropdown-menu.tsx"
+        ]
+      },
+      "layout": {
+        "__files__": [
+          "main-nav.tsx",
+          "header.tsx",
+          "footer.tsx"
+        ]
       }
     },
-    "hooks": {
-      "use-mobile.tsx": null,
-      "use-toast.ts": null
-    },
     "lib": {
-      "utils.ts": null
+      "__files__": [
+        "utils.ts",
+        "placeholder-data.ts"
+      ]
     },
-    "styles": {
-      "footer.css": null,
-      "navbar.css": null,
-      "redessociales.css": null
+    "ai": {
+      "__files__": [
+        "dev.ts",
+        "genkit.ts"
+      ]
+    },
+    "hooks": {
+      "__files__": [
+        "use-mobile.tsx",
+        "use-toast.ts"
+      ]
+    },
+    "app": {
+      "__files__": [
+        "favicon.ico",
+        "page.tsx",
+        "layout.tsx",
+        "globals.css"
+      ],
+      "history": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "team": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "contact": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "matches": {
+        "__files__": [
+          "page.tsx"
+        ],
+        "[id]": {
+          "__files__": [
+            "page.tsx"
+          ]
+        }
+      }
     }
+  },
+  "public": {
+    "__files__": [
+      "Liberdad Escudo.jpg",
+      "Libertad.png",
+      "Logo.svg",
+      "HeroPrincipal.png"
+    ]
   }
 }
