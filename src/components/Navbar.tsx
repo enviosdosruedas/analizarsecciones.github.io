@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 const navLinks = [
   { href: '/', label: 'Inicio' },
   { href: '/optimizar', label: 'Optimizar' },
+  { href: '/otra', label: 'Otra' }, // Added new link
 ];
 
 const Navbar: FC = () => {
