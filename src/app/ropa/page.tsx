@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 interface EstilosIAFormData {
   requestType: string;
   specificName: string;
-  baseDirectory: string; // Stays as string
+  baseDirectory: string;
   integrationFile: string;
   integrationLocation: string;
   detailedDescription: string;
@@ -37,54 +37,64 @@ interface EstilosIAFormData {
   additionalConsiderations: string;
 }
 
-// Helper function to extract all file paths from the project structure recursively
-const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
-  if (typeof structure !== 'object' || structure === null) {
-    return allPaths;
-  }
-
-  Object.keys(structure).forEach(key => {
-    const newPath = currentPath ? `${currentPath}/${key}` : key;
-    const value = structure[key];
-
-    if (typeof value === 'object' && value !== null) {
-      // It's a directory, recurse (and add if it's a directory itself for directory selection)
-      extractAllFilePaths(value, newPath, allPaths);
-    } else {
-      // It's a file, add its path if it looks like a potential target (e.g., .tsx, .js, .css)
-      if (/\.(tsx|jsx|js|html|css)$/.test(key) && !key.startsWith('.')) {
-         if (!allPaths.some(p => p.value === newPath)) {
-            allPaths.push({ value: newPath, label: newPath });
-        }
-      }
-    }
-  });
-  return allPaths;
-};
-
-// Helper function to extract all directory paths from the project structure recursively
+// Helper function to extract all directory paths from the project structure recursively,
+// understanding the __files__ convention.
 const extractAllDirectoryPaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
   if (typeof structure !== 'object' || structure === null) {
     return allPaths;
   }
 
   Object.keys(structure).forEach(key => {
-    const newPath = currentPath ? `${currentPath}/${key}` : key;
-    const value = structure[key];
+    // Skip the __files__ key itself as it's not a directory
+    if (key === '__files__') {
+      return;
+    }
 
+    const value = structure[key];
+    const newPath = currentPath ? `${currentPath}/${key}` : key;
+
+    // Check if the current key represents a directory (i.e., its value is an object)
     if (typeof value === 'object' && value !== null) {
-      // It's a directory. Add its path and recurse.
-      // Ensure it's not a hidden directory and is part of 'src' or a common top-level dir
-      if (!key.startsWith('.') && (newPath.startsWith('src') || !newPath.includes('/'))) {
-         if (!allPaths.some(p => p.value === newPath)) {
-            allPaths.push({ value: newPath, label: newPath });
+      // Add this path if it's a relevant directory (e.g., under src)
+      // and not already added.
+       if (!key.startsWith('.') && (newPath.startsWith('src') || !newPath.includes('/'))) {
+        if (!allPaths.some(p => p.value === newPath)) {
+          allPaths.push({ value: newPath, label: newPath });
         }
       }
+      // Recurse into the subdirectory
       extractAllDirectoryPaths(value, newPath, allPaths);
     }
-    // We are only interested in directories, so we don't process files here
   });
   return allPaths;
+};
+
+
+// Helper function to get files from a specific directory within the project structure
+const getFilesInDirectory = (structure: any, dirPath: string): ComboboxOption[] => {
+  if (!structure || !dirPath) return [];
+  const pathParts = dirPath.split('/'); // e.g., "src/app" -> ["src", "app"]
+  let currentLevel = structure;
+
+  for (const part of pathParts) {
+    if (currentLevel && typeof currentLevel === 'object' && part in currentLevel) {
+      currentLevel = currentLevel[part];
+    } else {
+      console.warn(`Path part "${part}" not found in structure for dirPath "${dirPath}"`);
+      return []; // Path not found or part is not an object
+    }
+  }
+
+  if (currentLevel && typeof currentLevel === 'object' && Array.isArray(currentLevel.__files__)) {
+    return currentLevel.__files__
+      .filter((filename: unknown): filename is string => typeof filename === 'string' && /\.(tsx|jsx|js|html|css)$/.test(filename) && !filename.startsWith('.'))
+      .map((filename: string) => ({
+        value: `${dirPath}/${filename}`, // Full path for value
+        label: filename, // Just filename for label, or full path if preferred: `${dirPath}/${filename}`
+      })).sort((a,b) => a.label.localeCompare(b.label));
+  }
+  console.warn(`__files__ array not found or not an array in structure for dirPath "${dirPath}"`, currentLevel);
+  return [];
 };
 
 
@@ -100,8 +110,9 @@ const EstilosIAPromptGeneratorPage: FC = () => {
     additionalConsiderations: '',
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-  const [filePaths, setFilePaths] = useState<ComboboxOption[]>([]);
-  const [directoryOptions, setDirectoryOptions] = useState<ComboboxOption[]>([]); // New state for directory options
+  const [projectStructure, setProjectStructure] = useState<any>(null); // Store the whole structure
+  const [directoryOptions, setDirectoryOptions] = useState<ComboboxOption[]>([]);
+  const [integrationFileOptions, setIntegrationFileOptions] = useState<ComboboxOption[]>([]); // For the integration file combobox
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -114,19 +125,15 @@ const EstilosIAPromptGeneratorPage: FC = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const structure = await response.json();
-
-        const extractedFiles = extractAllFilePaths(structure).sort((a, b) => a.label.localeCompare(b.label));
-        setFilePaths(extractedFiles);
+        setProjectStructure(structure); // Save the fetched structure
 
         const extractedDirs = extractAllDirectoryPaths(structure, '', []).sort((a,b) => a.label.localeCompare(b.label));
-        // Filter to ensure only relevant directories (e.g., under src) are shown, or adjust logic as needed
         setDirectoryOptions(extractedDirs.filter(dir => dir.value.startsWith('src')));
-
 
       } catch (error) {
         console.error("Failed to fetch or process project structure for EstilosIA:", error);
-        setFilePaths([]);
         setDirectoryOptions([]);
+        setProjectStructure(null);
         toast({
           title: 'Error',
           description: 'Failed to load project structure for EstilosIA. Please check console.',
@@ -140,6 +147,22 @@ const EstilosIAPromptGeneratorPage: FC = () => {
     fetchAndProcessStructure();
   }, [toast]);
 
+  // useEffect to update integrationFileOptions when baseDirectory or projectStructure changes
+  useEffect(() => {
+    if (formData.baseDirectory && projectStructure) {
+      const files = getFilesInDirectory(projectStructure, formData.baseDirectory);
+      setIntegrationFileOptions(files);
+      // Optionally reset integrationFile if the directory changes and the current file is not in the new list
+      if (!files.find(f => f.value === formData.integrationFile)) {
+        setFormData(prev => ({ ...prev, integrationFile: '' }));
+      }
+    } else {
+      setIntegrationFileOptions([]);
+      setFormData(prev => ({ ...prev, integrationFile: '' }));
+    }
+  }, [formData.baseDirectory, projectStructure, formData.integrationFile]);
+
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
@@ -149,7 +172,7 @@ const EstilosIAPromptGeneratorPage: FC = () => {
   );
 
   const handleRequestTypeChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, requestType: value }));
+    setFormData((prev) => ({ ...prev, requestType: value, baseDirectory: '', integrationFile: '' })); // Reset dependent fields
   }, []);
 
   const handleIntegrationFileChange = useCallback((value: string) => {
@@ -157,7 +180,7 @@ const EstilosIAPromptGeneratorPage: FC = () => {
   }, []);
 
   const handleBaseDirectoryChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, baseDirectory: value }));
+    setFormData((prev) => ({ ...prev, baseDirectory: value, integrationFile: '' })); // Reset integration file when base dir changes
   }, []);
 
 
@@ -181,7 +204,6 @@ const EstilosIAPromptGeneratorPage: FC = () => {
       additionalConsiderations,
     } = formData;
 
-    // Construct the prompt using the "Plantilla de Prompt para Solicitudes de Desarrollo en EstilosIA"
     const prompt = `Hola, necesito implementar/modificar lo siguiente en la aplicación EstilosIA:
 
 1.  Tipo de Solicitud: ${requestType || '[Por favor, selecciona un tipo]'}
@@ -294,8 +316,8 @@ const EstilosIAPromptGeneratorPage: FC = () => {
                   onChange={handleBaseDirectoryChange}
                   placeholder={isLoadingPaths ? "Cargando directorios..." : "Seleccionar directorio base..."}
                   searchPlaceholder="Buscar directorio..."
-                  emptyPlaceholder="Directorio no encontrado."
-                  disabled={isLoadingPaths}
+                  emptyPlaceholder="Directorio no encontrado o no hay directorios en 'src'."
+                  disabled={isLoadingPaths || directoryOptions.length === 0}
                   triggerClassName="w-full"
                   contentClassName="w-[--radix-popover-trigger-width]"
                 />
@@ -313,13 +335,13 @@ const EstilosIAPromptGeneratorPage: FC = () => {
                     <div className='space-y-1'>
                         <Label htmlFor="integrationFile" className="text-sm font-normal">Archivo Principal de Integración</Label>
                         <Combobox
-                        options={filePaths}
+                        options={integrationFileOptions}
                         value={formData.integrationFile}
                         onChange={handleIntegrationFileChange}
-                        placeholder={isLoadingPaths ? "Cargando archivos..." : "Seleccionar archivo existente..."}
+                        placeholder={!formData.baseDirectory ? "Selecciona un directorio base primero" : (isLoadingPaths ? "Cargando archivos..." : "Seleccionar archivo de integración...")}
                         searchPlaceholder="Buscar archivo..."
-                        emptyPlaceholder="Archivo no encontrado."
-                        disabled={isLoadingPaths}
+                        emptyPlaceholder="Archivo no encontrado o no hay archivos en el directorio."
+                        disabled={isLoadingPaths || !formData.baseDirectory || integrationFileOptions.length === 0}
                         triggerClassName="w-full"
                         contentClassName="w-[--radix-popover-trigger-width]"
                         />
@@ -426,3 +448,4 @@ const EstilosIAPromptGeneratorPage: FC = () => {
 };
 
 export default EstilosIAPromptGeneratorPage;
+
