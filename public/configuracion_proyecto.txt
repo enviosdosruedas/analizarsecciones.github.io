@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
+        hostname: 'placehold.co',
         port: '',
         pathname: '/**',
       },
@@ -53,73 +53,73 @@ export default nextConfig;
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf .next out",
     "dev": "next dev --turbopack -p 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "optimize:ropa-images": "node ./scripts/optimize-ropa-images.mjs"
   },
   "dependencies": {
-    "@genkit-ai/googleai": "^1.6.2",
-    "@genkit-ai/next": "^1.6.2",
+    "@genkit-ai/googleai": "^1.9.0",
+    "@genkit-ai/next": "^1.9.0",
+    "@google/genai": "^0.5.0",
     "@hookform/resolvers": "^4.1.3",
-    "@radix-ui/react-accordion": "^1.2.3",
-    "@radix-ui/react-alert-dialog": "^1.1.6",
-    "@radix-ui/react-avatar": "^1.1.3",
-    "@radix-ui/react-checkbox": "^1.1.4",
-    "@radix-ui/react-dialog": "^1.1.6",
-    "@radix-ui/react-dropdown-menu": "^2.1.6",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-menubar": "^1.1.6",
-    "@radix-ui/react-popover": "^1.1.6",
-    "@radix-ui/react-progress": "^1.1.2",
-    "@radix-ui/react-radio-group": "^1.2.3",
-    "@radix-ui/react-scroll-area": "^1.2.3",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-separator": "^1.1.2",
-    "@radix-ui/react-slider": "^1.2.3",
-    "@radix-ui/react-slot": "^1.1.2",
-    "@radix-ui/react-switch": "^1.1.3",
-    "@radix-ui/react-tabs": "^1.1.3",
-    "@radix-ui/react-toast": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.1.8",
-    "@tanstack-query-firebase/react": "^1.0.5",
-    "@tanstack/react-query": "^5.66.0",
+    "@radix-ui/react-accordion": "^1.2.10",
+    "@radix-ui/react-alert-dialog": "^1.1.13",
+    "@radix-ui/react-avatar": "^1.1.9",
+    "@radix-ui/react-checkbox": "^1.3.1",
+    "@radix-ui/react-dialog": "^1.1.13",
+    "@radix-ui/react-dropdown-menu": "^2.1.14",
+    "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-menubar": "^1.1.14",
+    "@radix-ui/react-popover": "^1.1.13",
+    "@radix-ui/react-progress": "^1.1.6",
+    "@radix-ui/react-radio-group": "^1.3.6",
+    "@radix-ui/react-scroll-area": "^1.2.8",
+    "@radix-ui/react-select": "^2.2.4",
+    "@radix-ui/react-separator": "^1.1.6",
+    "@radix-ui/react-slider": "^1.3.4",
+    "@radix-ui/react-slot": "^1.2.2",
+    "@radix-ui/react-switch": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.11",
+    "@radix-ui/react-toast": "^1.2.13",
+    "@radix-ui/react-tooltip": "^1.2.6",
+    "@supabase/supabase-js": "^2.49.4",
+    "@tanstack-query-firebase/react": "^1.0.7",
+    "@tanstack/react-query": "^5.76.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
-    "embla-carousel-react": "^8.1.7",
-    "firebase": "^11.6.1-firebase-studio-sdk-integration.9de25069c",
-    "genkit": "^1.6.2",
+    "dotenv": "^16.5.0",
+    "firebase": "^11.7.3",
+    "genkit": "^1.9.0",
     "lucide-react": "^0.475.0",
-    "next": "^15.3.1",
+    "next": "15.2.3",
     "patch-package": "^8.0.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.54.2",
-    "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1",
+    "react-hook-form": "^7.56.3",
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
+    "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.10.7",
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "9.26.0",
-    "eslint-config-next": "15.3.1",
-    "genkit-cli": "^1.6.1",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "@types/node": "^20.17.47",
+    "@types/react": "^18.3.21",
+    "@types/react-dom": "^18.3.7",
+    "genkit-cli": "^1.9.0",
+    "postcss": "^8.5.3",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
   }
 }
-
 
 === postcss.config.mjs ===
 /** @type {import('postcss-load-config').Config} */
@@ -145,15 +145,6 @@ export default {
   theme: {
   	extend: {
   		colors: {
-        // New Custom Palette
-        'royal-blue-traditional': { DEFAULT: '#00296b', 100: '#c5cffd', 200: '#8b9ffb', 300: '#5170f9', 400: '#1740f7', 500: '#00296b', 600: '#00225a', 700: '#001a48', 800: '#001337', 900: '#000b25' },
-        'marian-blue': { DEFAULT: '#003f88', 100: '#cce0ff', 200: '#99c2ff', 300: '#66a3ff', 400: '#3385ff', 500: '#003f88', 600: '#00326d', 700: '#002552', 800: '#001837', 900: '#000c1c' }, // Added Marian Blue definition
-        'polynesian-blue': { DEFAULT: '#00509d', 100: '#ccedff', 200: '#99daff', 300: '#66c6ff', 400: '#33b3ff', 500: '#00509d', 600: '#00407e', 700: '#00305e', 800: '#00203f', 900: '#00101f' },
-        'mikado-yellow': { DEFAULT: '#fdc500', 100: '#fff4cc', 200: '#ffe999', 300: '#ffde66', 400: '#ffd333', 500: '#fdc500', 600: '#cca000', 700: '#997800', 800: '#665000', 900: '#332800' },
-        'gold': { DEFAULT: '#ffd500', 100: '#fff7cc', 200: '#ffef99', 300: '#ffe666', 400: '#ffdd33', 500: '#ffd500', 600: '#ccaa00', 700: '#997f00', 800: '#665500', 900: '#332a00' }, // Added Gold definition
-
-
-        // Shadcn UI Theme Colors (mapped from HSL variables in globals.css)
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -165,20 +156,20 @@ export default {
   				foreground: 'hsl(var(--popover-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))', // Uses --primary from globals.css
-  				foreground: 'hsl(var(--primary-foreground))' // Uses --primary-foreground from globals.css
+  				DEFAULT: 'hsl(var(--primary))',
+  				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))', // Uses --secondary from globals.css
-  				foreground: 'hsl(var(--secondary-foreground))' // Uses --secondary-foreground from globals.css
+  				DEFAULT: 'hsl(var(--secondary))',
+  				foreground: 'hsl(var(--secondary-foreground))'
   			},
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
   				foreground: 'hsl(var(--muted-foreground))'
   			},
   			accent: {
-  				DEFAULT: 'hsl(var(--accent))', // Uses --accent from globals.css
-  				foreground: 'hsl(var(--accent-foreground))' // Uses --accent-foreground from globals.css
+  				DEFAULT: 'hsl(var(--accent))',
+  				foreground: 'hsl(var(--accent-foreground))'
   			},
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
@@ -279,81 +270,96 @@ body {
 
 @layer base {
   :root {
-    /* ShadCN Theme Variables (Light) - Mapped to New Palette */
-    --background: 0 0% 100%; /* White */
-    --foreground: 210 29% 14%; /* Default Dark Blue-Gray (Good Contrast) */
-
+    --background: 0 0% 98%; /* Very light gray, almost white */
+    --foreground: 220 10% 15%; /* Dark, slightly desaturated blue/gray for text */
+    
     --card: 0 0% 100%; /* White */
-    --card-foreground: 210 29% 14%; /* Default Dark Blue-Gray */
-
+    --card-foreground: 220 10% 15%; /* Dark, slightly desaturated blue/gray for text */
+    
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 210 29% 14%; /* Default Dark Blue-Gray */
-
-    /* === NEW PALETTE MAPPING === */
-    --primary: 216 100% 21%; /* royal-blue-traditional (#00296b) */
-    --primary-foreground: 0 0% 98%; /* Almost White (Good contrast on royal blue) */
-
-    --secondary: 209 100% 31%; /* polynesian-blue (#00509d) */
-    --secondary-foreground: 0 0% 98%; /* Almost White (Good contrast on polynesian blue) */
-
-    --muted: 0 0% 96.1%; /* Default Light Gray */
-    --muted-foreground: 0 0% 45.1%; /* Default Medium Gray */
-
-    --accent: 47 100% 50%; /* mikado-yellow (#fdc500) */
-    --accent-foreground: 227 96% 8%; /* Dark Royal Blue (Contrast for yellow) */
-
-    --destructive: 0 84.2% 60.2%; /* Default Red */
-    --destructive-foreground: 0 0% 98%; /* Almost White */
-
-    --border: 0 0% 89.8%; /* Default Light Gray */
-    --input: 0 0% 89.8%; /* Default Light Gray */
-    --ring: 209 100% 31%; /* polynesian-blue (#00509d) - Using secondary for ring */
-
+    --popover-foreground: 220 10% 15%; /* Dark, slightly desaturated blue/gray for text */
+    
+    --primary: 16 100% 63%; /* Coral #FF7043 */
+    --primary-foreground: 0 0% 100%; /* White for text on coral */
+    
+    --secondary: 210 20% 92%; /* Light gray-blue */
+    --secondary-foreground: 220 10% 25%; /* Slightly darker text for secondary elements */
+    
+    --muted: 210 20% 95%; /* Very light gray-blue, lighter than secondary */
+    --muted-foreground: 210 10% 45%; /* Grayer text for muted contexts */
+    
+    --accent: 195 100% 94%; /* Light Blue #E1F5FE */
+    --accent-foreground: 195 80% 30%; /* A noticeable blue for text on light blue accent */
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 210 20% 88%; /* Slightly darker border for better definition */
+    --input: 210 20% 92%; /* Same as secondary, for input fields background */
+    --ring: 16 100% 63%; /* Coral for focus rings */
+    
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-
     --radius: 0.5rem;
+
+    /* Sidebar variables - kept for shadcn component compatibility, but not actively themed for this app */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* ShadCN Theme Variables (Dark) - Mapped to New Palette */
-    --background: 216 100% 8%; /* Dark Royal Blue */
-    --foreground: 0 0% 98%; /* Almost White */
-
-    --card: 216 100% 12%; /* Slightly Lighter Dark Royal Blue */
-    --card-foreground: 0 0% 98%; /* Almost White */
-
-    --popover: 216 100% 6%; /* Darker Royal Blue */
-    --popover-foreground: 0 0% 98%; /* Almost White */
-
-    /* === NEW PALETTE MAPPING (Dark) === */
-    --primary: 216 100% 70%; /* Lighter Royal Blue for contrast */
-    --primary-foreground: 216 100% 8%; /* Dark Background */
-
-    --secondary: 209 100% 70%; /* Lighter Polynesian Blue */
-    --secondary-foreground: 0 0% 9%; /* Near Black */
-
-    --muted: 216 100% 16%; /* Slightly lighter dark blue */
-    --muted-foreground: 0 0% 63.9%; /* Lighter Gray */
-
-    --accent: 47 100% 50%; /* mikado-yellow (#fdc500) */
-    --accent-foreground: 227 96% 8%; /* Dark Royal Blue */
-
-    --destructive: 0 62.8% 30.6%; /* Darker Red */
-    --destructive-foreground: 0 0% 98%; /* Almost White */
-
-    --border: 216 100% 16%; /* Slightly lighter dark blue */
-    --input: 216 100% 16%; /* Slightly lighter dark blue */
-    --ring: 209 100% 70%; /* Lighter Polynesian Blue */
-
+    /* Keeping dark mode variables, can be customized further if dark mode is implemented */
+    --background: 220 10% 10%;
+    --foreground: 0 0% 95%;
+    
+    --card: 220 10% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 220 10% 10%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 16 100% 63%; /* Coral #FF7043 */
+    --primary-foreground: 0 0% 100%; /* White */
+    
+    --secondary: 210 20% 20%;
+    --secondary-foreground: 0 0% 90%;
+    
+    --muted: 210 20% 15%;
+    --muted-foreground: 0 0% 60%;
+    
+    --accent: 195 100% 25%; 
+    --accent-foreground: 195 80% 90%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 210 20% 25%;
+    --input: 210 20% 20%;
+    --ring: 16 100% 63%; /* Coral */
+    
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -363,31 +369,6 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-/* Custom animation utilities */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
-    opacity: 0; /* Start hidden */
-  }
-  .animation-delay-200 {
-    animation-delay: 0.2s;
-  }
-  .animation-delay-400 {
-    animation-delay: 0.4s;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px); /* Optional: slight upward movement */
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 }
 

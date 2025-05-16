@@ -1,117 +1,253 @@
 {
-    "src": {
+  "src": {
+    "app": {
       "__files__": [
-        "types.ts"
+        "layout.tsx",
+        "actions.ts",
+        "page.tsx",
+        "favicon.ico",
+        "globals.css"
       ],
-      "components": {
+      "calendario": {
         "__files__": [
-          "match-item.tsx",
-          "hero-principal.tsx",
-          "team-member-card.tsx"
-        ],
-        "ui": {
-          "__files__": [
-            "form.tsx",
-            "slider.tsx",
-            "table.tsx",
-            "toast.tsx",
-            "alert-dialog.tsx",
-            "scroll-area.tsx",
-            "separator.tsx",
-            "tooltip.tsx",
-            "radio-group.tsx",
-            "skeleton.tsx",
-            "sheet.tsx",
-            "input.tsx",
-            "badge.tsx",
-            "chart.tsx",
-            "progress.tsx",
-            "alert.tsx",
-            "popover.tsx",
-            "switch.tsx",
-            "toaster.tsx",
-            "select.tsx",
-            "calendar.tsx",
-            "button.tsx",
-            "sidebar.tsx",
-            "textarea.tsx",
-            "checkbox.tsx",
-            "accordion.tsx",
-            "avatar.tsx",
-            "tabs.tsx",
-            "card.tsx",
-            "menubar.tsx",
-            "label.tsx",
-            "dialog.tsx",
-            "dropdown-menu.tsx"
-          ]
-        },
-        "layout": {
-          "__files__": [
-            "main-nav.tsx",
-            "header.tsx",
-            "footer.tsx"
-          ]
-        }
-      },
-      "lib": {
-        "__files__": [
-          "utils.ts",
-          "placeholder-data.ts"
+          "page.tsx"
         ]
       },
-      "ai": {
+      "sugerenciaia": {
         "__files__": [
-          "dev.ts",
-          "genkit.ts"
+          "page.tsx"
         ]
       },
-      "hooks": {
+      "configuracion": {
         "__files__": [
-          "use-mobile.tsx",
-          "use-toast.ts"
+          "page.tsx"
         ]
       },
-      "app": {
+      "deseos": {
         "__files__": [
-          "favicon.ico",
-          "page.tsx",
-          "layout.tsx",
-          "globals.css"
-        ],
-        "history": {
-          "__files__": [
-            "page.tsx"
-          ]
-        },
-        "team": {
-          "__files__": [
-            "page.tsx"
-          ]
-        },
-        "contact": {
-          "__files__": [
-            "page.tsx"
-          ]
-        },
-        "matches": {
-          "__files__": [
-            "page.tsx"
-          ],
-          "[id]": {
-            "__files__": [
-              "page.tsx"
-            ]
-          }
-        }
+          "page.tsx"
+        ]
+      },
+      "archivo": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "closet": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "settings": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "privacy-policy": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "looks": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "statistics": {
+        "__files__": [
+          "page.tsx"
+        ]
+      },
+      "dashboard": {
+        "__files__": [
+          "page.tsx"
+        ]
       }
     },
-    "public": {
+    "hooks": {
       "__files__": [
-        "Liberdad Escudo.jpg",
-        "Libertad.png",
-        "Logo.svg",
-        "HeroPrincipal.png"
+        "use-mobile.tsx",
+        "use-toast.ts"
       ]
+    },
+    "data": {
+      "__files__": [
+        "ropa_filenames_example.txt",
+        "prendas_ejemplos.csv"
+      ]
+    },
+    "components": {
+      "__files__": [
+        "ClosetFilterBar.tsx",
+        "Header.tsx",
+        "OutfitSuggestion.tsx",
+        "ClothingForm.tsx",
+        "ClothingTable.tsx",
+        "ClothingCard.tsx",
+        "ColorSwatch.tsx",
+        "InspirationCard.tsx",
+        "TemperatureControl.tsx",
+        "StyleSelection.tsx",
+        "SuggestionHistory.tsx",
+        "GridCardsToggle.tsx",
+        "OutfitExplanation.tsx"
+      ],
+      "wishlist": {
+        "__files__": [
+          "WishlistForm.tsx",
+          "WishlistItemCard.tsx"
+        ]
+      },
+      "calendario": {
+        "__files__": [
+          "AssignmentCard.tsx",
+          "AssignmentModal.tsx"
+        ]
+      },
+      "ui": {
+        "__files__": [
+          "command.tsx",
+          "dialog.tsx",
+          "progress.tsx",
+          "skeleton.tsx",
+          "separator.tsx",
+          "popover.tsx",
+          "scroll-area.tsx",
+          "sheet.tsx",
+          "accordion.tsx",
+          "badge.tsx",
+          "avatar.tsx",
+          "menubar.tsx",
+          "dropdown-menu.tsx",
+          "button.tsx",
+          "alert-dialog.tsx",
+          "calendar.tsx",
+          "toast.tsx",
+          "label.tsx",
+          "card.tsx",
+          "slider.tsx",
+          "MultiSelectCommand.tsx",
+          "checkbox.tsx",
+          "Navbar.tsx",
+          "radio-group.tsx",
+          "chart.tsx",
+          "textarea.tsx",
+          "Footer.tsx",
+          "toaster.tsx",
+          "sidebar.tsx",
+          "table.tsx",
+          "select.tsx",
+          "form.tsx",
+          "tooltip.tsx",
+          "switch.tsx",
+          "tabs.tsx",
+          "alert.tsx",
+          "input.tsx"
+        ]
+      },
+      "icons": {
+        "__files__": [
+          "Logo.tsx"
+        ]
+      },
+      "looks": {
+        "__files__": [
+          "LookForm.tsx",
+          "LookCard.tsx"
+        ]
+      },
+      "statistics": {
+        "__files__": [
+          "TimeActivityChart.tsx",
+          "StyleUsageChart.tsx",
+          "IntelligentInsightCard.tsx"
+        ]
+      },
+      "dashboard": {
+        "__files__": [
+          "ColorDistributionChart.tsx",
+          "StatsCard.tsx",
+          "nuevoprompts.tsx",
+          "PromtOptimizado.tsx"
+        ]
+      }
+    },
+    "types": {
+      "__files__": [
+        "index.ts"
+      ]
+    },
+    "lib": {
+      "__files__": [
+        "utils.ts",
+        "supabaseClient.ts",
+        "dataMappers.ts"
+      ]
+    },
+    "ai": {
+      "__files__": [
+        "genkit.ts",
+        "dev.ts"
+      ],
+      "flows": {
+        "__files__": [
+          "generate-outfit-explanation.ts"
+        ]
+      }
+    }
+  },
+  "public": {
+    "ropa": {
+      "__files__": [
+        "Campera lana negra.png",
+        "Saco lanilla celeste.png",
+        "Blazer blanco 3-4.png",
+        "Remera mc negra mc azul.png",
+        "Remera mc negra.png",
+        "Camisa lino ml beige.png",
+        "Blazer ml verde.png",
+        "Jean lemon.png",
+        "Pantalón cuadrille.png",
+        "Musculosa mariposa blanca.png",
+        "Jean moom azul claro.png",
+        "Championes altos abrigados blancos.png",
+        "Blazer cuadrille rojo.png",
+        "Remera mc azul.png",
+        "Remera ml verde aceituna.png",
+        "Remera mc blanca.png",
+        "Pantalón baggy negro.png",
+        "Camisa estampada ml verde.png",
+        "Campera hilo verde corta.png",
+        "Jean recto azul.png",
+        "Pantalón deportivo con puños celeste.png",
+        "Camisa ml blanca.png"
+      ],
+      "antes": {
+        "__files__": [
+          "Camisa lino ml beige .jpg",
+          "Remera mc negra .jpg",
+          "Jean moom azul claro.jpg",
+          "Blazer blanco 3-4.jpg",
+          "Jean recto azul.jpg",
+          "Saco lanilla celeste .jpg",
+          "Campera lana negra.jpg",
+          "Blazer cuadrille rojo.jpg",
+          "Remera mc negra.jpg",
+          "Remera ml verde aceituna .jpg",
+          "Camisa estampada ml verde.jpg",
+          "Pantalón cuadrille.jpg",
+          "Remera mc azul.jpg",
+          "Musculosa mariposa blanca.jpg",
+          "Jean lemon.jpg",
+          "Pantalón deportivo con puños celeste.jpg",
+          "Pantalón baggy negro.jpg",
+          "Campera hilo verde corta.jpg",
+          "Blazer ml verde.jpg",
+          "Camisa ml blanca.jpg",
+          "Remera mc blanca.jpg",
+          "Championes altos abrigados blancos.jpg"
+        ]
+      }
     }
   }
+}

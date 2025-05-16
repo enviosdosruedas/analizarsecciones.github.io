@@ -1,212 +1,253 @@
 {
-  "public": {
-    "_auth": {
-      "experiments.js": null,
-      "handler.html": null,
-      "handler.js": null,
-      "iframe.html": null,
-      "iframe.js": null
-    },
-    "icon": {
-      "icon-facebook.svg": null,
-      "icon-gmail.svg": null,
-      "icon-instagram.svg": null,
-      "icon-whatsapp.svg": null
-    },
-    "img": {
-      "Emprendedoresbanner.webp": null,
-      "Emprendedoresbannerrapidas.webp": null,
-      "Emprendedoresbannerrapidas2.webp": null,
-      "Emprendedoresbannerrapidas3.webp": null,
-      "LogoEnviosDosRuedas-180.png": null,
-      "LogoEnviosDosRuedas-192.png": null,
-      "LogoEnviosDosRuedas-32.png": null,
-      "LogoEnviosDosRuedas.png": null,
-      "LogoEnviosDosRuedas.webp": null,
-      "android-chrome-192x192.png": null,
-      "android-chrome-512x512.png": null,
-      "apple-touch-icon.png": null,
-      "favicon-16x16.png": null,
-      "favicon-96x96.png": null,
-      "favicon.ico": null,
-      "favicon.svg": null,
-      "web-app-manifest-512x512.png": null
-    },
-    "Emprendedoresbanner.webp": null,
-    "Emprendedoresbannerrapidas.webp": null,
-    "Emprendedoresbannerrapidas2.webp": null,
-    "Emprendedoresbannerrapidas3.webp": null,
-    "LogoEnviosDosRuedas-180.png": null,
-    "LogoEnviosDosRuedas-192.png": null,
-    "LogoEnviosDosRuedas-32.png": null,
-    "LogoEnviosDosRuedas.png": null,
-    "LogoEnviosDosRuedas.webp": null,
-    "android-chrome-192x192.png": null,
-    "android-chrome-512x512.png": null,
-    "apple-touch-icon.png": null,
-    "favicon-16x16.png": null,
-    "favicon-96x96.png": null,
-    "favicon.ico": null,
-    "favicon.svg": null,
-    "web-app-manifest-512x512.png": null
-  },
   "src": {
-    "ai": {
-      "ai-instance.ts": null,
-      "dev.ts": null
-    },
     "app": {
-      "CotizadorNuevo": {
-        "page.tsx": null
+      "__files__": [
+        "layout.tsx",
+        "actions.ts",
+        "page.tsx",
+        "favicon.ico",
+        "globals.css"
+      ],
+      "calendario": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "contacto": {
-        "page.tsx": null
+      "sugerenciaia": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "cotizador-envios-express": {
-        "page.tsx": null
+      "configuracion": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "cotizador-envios-lowcost": {
-        "page.tsx": null
+      "deseos": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "delivery-moto-express": {
-        "page.tsx": null
+      "archivo": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "delivery-moto-fija": {
-        "page.tsx": null
+      "closet": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "envios-emprendedores": {
-        "page.tsx": null
+      "settings": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "enviosflex": {
-        "page.tsx": null
+      "privacy-policy": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "mensajeria-envios-express": {
-        "page.tsx": null
+      "looks": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "mensajeria-envios-lowcost": {
-        "page.tsx": null
+      "statistics": {
+        "__files__": [
+          "page.tsx"
+        ]
       },
-      "nuestrasredes": {
-        "page.tsx": null
-      },
-      "preguntasfrecuentes": {
-        "page.tsx": null
-      },
-      "sobre-nosotros": {
-        "page.tsx": null
-      },
-      "favicon.ico": null,
-      "globals.css": null,
-      "layout.tsx": null,
-      "page.tsx": null
-    },
-    "components": {
-      "layout": {
-        "footer.tsx": null,
-        "header.tsx": null
-      },
-      "sections": {
-        "BusquedaFaq.tsx": null,
-        "CancelacionDeliveyMotoFija.tsx": null,
-        "CaracteristicasDeliveyMotoFija.tsx": null,
-        "CoberturaDeliveyMotoExpress.tsx": null,
-        "ComenzarEmprendedores.tsx": null,
-        "CompromisoDeliveyMotoFija.tsx": null,
-        "CompromisoEmprendedores.tsx": null,
-        "CompromisoEnviosFlex.tsx": null,
-        "ContactMenEnvLowCost.tsx": null,
-        "ContactoDeliveyMotoExpress.tsx": null,
-        "ContactoDeliveyMotoFija.tsx": null,
-        "ContactoEnviosFlex.tsx": null,
-        "CotizarEnviosExpresForm.tsx": null,
-        "EmprendedorContacto.tsx": null,
-        "ExpressPrioritario.tsx": null,
-        "GuiaDeliveyMotoFija.tsx": null,
-        "HeroContacto.tsx": null,
-        "HeroDeliveyMotoExpress.tsx": null,
-        "HeroDeliveyMotoFija.tsx": null,
-        "HeroEmprendedores.tsx": null,
-        "HeroEnviosFlex.tsx": null,
-        "HeroFaq.tsx": null,
-        "HeroMenEnvExpress.tsx": null,
-        "HeroMenEnvLowCost.tsx": null,
-        "HeroNosotros.tsx": null,
-        "HeroNuestrasRedes.tsx": null,
-        "InfoContacto.tsx": null,
-        "InfoEmprendedores.tsx": null,
-        "InfoEnviosFlex.tsx": null,
-        "ListoEmprendedores.tsx": null,
-        "MasInfoDeliveyMotoExpress.tsx": null,
-        "MasPreguntas.tsx": null,
-        "PasosServicios.tsx": null,
-        "PrecioEmprendedores.tsx": null,
-        "PreciosEnviosFlex.tsx": null,
-        "PreciosMenEnvLowCost.tsx": null,
-        "PrincipalEnviosFlex.tsx": null,
-        "Principalcontacto.tsx": null,
-        "RecomendacionesEmprendedores.tsx": null,
-        "RecomendacionesEnviosFlex.tsx": null,
-        "Resumenmensajeriaenviosexpress.tsx": null,
-        "ZonadeCobertura.tsx": null,
-        "banner-redes-sociales.tsx": null,
-        "cotizar-principal.tsx": null,
-        "emprendedores-principal.tsx": null,
-        "faqmenenvexpress.tsx": null,
-        "hero-section.tsx": null,
-        "info-emprendedores.tsx": null,
-        "precio-emprendedores.tsx": null,
-        "service-overview.tsx": null,
-        "servicios-destacados.tsx": null,
-        "vision-global.tsx": null
-      },
-      "ui": {
-        "accordion.tsx": null,
-        "alert-dialog.tsx": null,
-        "alert.tsx": null,
-        "avatar.tsx": null,
-        "badge.tsx": null,
-        "button.tsx": null,
-        "calendar.tsx": null,
-        "card.tsx": null,
-        "carousel.tsx": null,
-        "chart.tsx": null,
-        "checkbox.tsx": null,
-        "dialog.tsx": null,
-        "dropdown-menu.tsx": null,
-        "form.tsx": null,
-        "input.tsx": null,
-        "label.tsx": null,
-        "menubar.tsx": null,
-        "popover.tsx": null,
-        "progress.tsx": null,
-        "radio-group.tsx": null,
-        "scroll-area.tsx": null,
-        "select.tsx": null,
-        "separator.tsx": null,
-        "sheet.tsx": null,
-        "sidebar.tsx": null,
-        "skeleton.tsx": null,
-        "slider.tsx": null,
-        "switch.tsx": null,
-        "table.tsx": null,
-        "tabs.tsx": null,
-        "textarea.tsx": null,
-        "toast.tsx": null,
-        "toaster.tsx": null,
-        "tooltip.tsx": null
+      "dashboard": {
+        "__files__": [
+          "page.tsx"
+        ]
       }
     },
     "hooks": {
-      "use-mobile.tsx": null,
-      "use-toast.ts": null
+      "__files__": [
+        "use-mobile.tsx",
+        "use-toast.ts"
+      ]
+    },
+    "data": {
+      "__files__": [
+        "ropa_filenames_example.txt",
+        "prendas_ejemplos.csv"
+      ]
+    },
+    "components": {
+      "__files__": [
+        "ClosetFilterBar.tsx",
+        "Header.tsx",
+        "OutfitSuggestion.tsx",
+        "ClothingForm.tsx",
+        "ClothingTable.tsx",
+        "ClothingCard.tsx",
+        "ColorSwatch.tsx",
+        "InspirationCard.tsx",
+        "TemperatureControl.tsx",
+        "StyleSelection.tsx",
+        "SuggestionHistory.tsx",
+        "GridCardsToggle.tsx",
+        "OutfitExplanation.tsx"
+      ],
+      "wishlist": {
+        "__files__": [
+          "WishlistForm.tsx",
+          "WishlistItemCard.tsx"
+        ]
+      },
+      "calendario": {
+        "__files__": [
+          "AssignmentCard.tsx",
+          "AssignmentModal.tsx"
+        ]
+      },
+      "ui": {
+        "__files__": [
+          "command.tsx",
+          "dialog.tsx",
+          "progress.tsx",
+          "skeleton.tsx",
+          "separator.tsx",
+          "popover.tsx",
+          "scroll-area.tsx",
+          "sheet.tsx",
+          "accordion.tsx",
+          "badge.tsx",
+          "avatar.tsx",
+          "menubar.tsx",
+          "dropdown-menu.tsx",
+          "button.tsx",
+          "alert-dialog.tsx",
+          "calendar.tsx",
+          "toast.tsx",
+          "label.tsx",
+          "card.tsx",
+          "slider.tsx",
+          "MultiSelectCommand.tsx",
+          "checkbox.tsx",
+          "Navbar.tsx",
+          "radio-group.tsx",
+          "chart.tsx",
+          "textarea.tsx",
+          "Footer.tsx",
+          "toaster.tsx",
+          "sidebar.tsx",
+          "table.tsx",
+          "select.tsx",
+          "form.tsx",
+          "tooltip.tsx",
+          "switch.tsx",
+          "tabs.tsx",
+          "alert.tsx",
+          "input.tsx"
+        ]
+      },
+      "icons": {
+        "__files__": [
+          "Logo.tsx"
+        ]
+      },
+      "looks": {
+        "__files__": [
+          "LookForm.tsx",
+          "LookCard.tsx"
+        ]
+      },
+      "statistics": {
+        "__files__": [
+          "TimeActivityChart.tsx",
+          "StyleUsageChart.tsx",
+          "IntelligentInsightCard.tsx"
+        ]
+      },
+      "dashboard": {
+        "__files__": [
+          "ColorDistributionChart.tsx",
+          "StatsCard.tsx",
+          "nuevoprompts.tsx",
+          "PromtOptimizado.tsx"
+        ]
+      }
+    },
+    "types": {
+      "__files__": [
+        "index.ts"
+      ]
     },
     "lib": {
-      "utils.ts": null
+      "__files__": [
+        "utils.ts",
+        "supabaseClient.ts",
+        "dataMappers.ts"
+      ]
     },
-    "styles": {
-      "footer.css": null,
-      "navbar.css": null,
-      "redessociales.css": null
+    "ai": {
+      "__files__": [
+        "genkit.ts",
+        "dev.ts"
+      ],
+      "flows": {
+        "__files__": [
+          "generate-outfit-explanation.ts"
+        ]
+      }
+    }
+  },
+  "public": {
+    "ropa": {
+      "__files__": [
+        "Campera lana negra.png",
+        "Saco lanilla celeste.png",
+        "Blazer blanco 3-4.png",
+        "Remera mc negra mc azul.png",
+        "Remera mc negra.png",
+        "Camisa lino ml beige.png",
+        "Blazer ml verde.png",
+        "Jean lemon.png",
+        "Pantalón cuadrille.png",
+        "Musculosa mariposa blanca.png",
+        "Jean moom azul claro.png",
+        "Championes altos abrigados blancos.png",
+        "Blazer cuadrille rojo.png",
+        "Remera mc azul.png",
+        "Remera ml verde aceituna.png",
+        "Remera mc blanca.png",
+        "Pantalón baggy negro.png",
+        "Camisa estampada ml verde.png",
+        "Campera hilo verde corta.png",
+        "Jean recto azul.png",
+        "Pantalón deportivo con puños celeste.png",
+        "Camisa ml blanca.png"
+      ],
+      "antes": {
+        "__files__": [
+          "Camisa lino ml beige .jpg",
+          "Remera mc negra .jpg",
+          "Jean moom azul claro.jpg",
+          "Blazer blanco 3-4.jpg",
+          "Jean recto azul.jpg",
+          "Saco lanilla celeste .jpg",
+          "Campera lana negra.jpg",
+          "Blazer cuadrille rojo.jpg",
+          "Remera mc negra.jpg",
+          "Remera ml verde aceituna .jpg",
+          "Camisa estampada ml verde.jpg",
+          "Pantalón cuadrille.jpg",
+          "Remera mc azul.jpg",
+          "Musculosa mariposa blanca.jpg",
+          "Jean lemon.jpg",
+          "Pantalón deportivo con puños celeste.jpg",
+          "Pantalón baggy negro.jpg",
+          "Campera hilo verde corta.jpg",
+          "Blazer ml verde.jpg",
+          "Camisa ml blanca.jpg",
+          "Remera mc blanca.jpg",
+          "Championes altos abrigados blancos.jpg"
+        ]
+      }
     }
   }
 }
