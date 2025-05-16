@@ -167,6 +167,7 @@
         "__files__": [
           "ColorDistributionChart.tsx",
           "StatsCard.tsx",
+          "OptimizedOutfitSuggester.tsx",
           "nuevoprompts.tsx",
           "PromtOptimizado.tsx"
         ]
@@ -187,7 +188,8 @@
     "ai": {
       "__files__": [
         "genkit.ts",
-        "dev.ts"
+        "dev.ts",
+        "ai-instance.ts"
       ],
       "flows": {
         "__files__": [
