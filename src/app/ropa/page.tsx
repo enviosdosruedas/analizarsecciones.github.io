@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 interface EstilosIAFormData {
   requestType: string;
   specificName: string;
-  baseDirectory: string;
+  baseDirectory: string; // Stays as string
   integrationFile: string;
   integrationLocation: string;
   detailedDescription: string;
@@ -38,7 +38,6 @@ interface EstilosIAFormData {
 }
 
 // Helper function to extract all file paths from the project structure recursively
-// This function is kept from the original PromptForgePage to populate file selection comboboxes
 const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
   if (typeof structure !== 'object' || structure === null) {
     return allPaths;
@@ -49,14 +48,41 @@ const extractAllFilePaths = (structure: any, currentPath: string = '', allPaths:
     const value = structure[key];
 
     if (typeof value === 'object' && value !== null) {
-      // It's a directory, recurse
+      // It's a directory, recurse (and add if it's a directory itself for directory selection)
       extractAllFilePaths(value, newPath, allPaths);
     } else {
       // It's a file, add its path if it looks like a potential target (e.g., .tsx, .js, .css)
       if (/\.(tsx|jsx|js|html|css)$/.test(key) && !key.startsWith('.')) {
-        allPaths.push({ value: newPath, label: newPath });
+         if (!allPaths.some(p => p.value === newPath)) {
+            allPaths.push({ value: newPath, label: newPath });
+        }
       }
     }
+  });
+  return allPaths;
+};
+
+// Helper function to extract all directory paths from the project structure recursively
+const extractAllDirectoryPaths = (structure: any, currentPath: string = '', allPaths: ComboboxOption[] = []): ComboboxOption[] => {
+  if (typeof structure !== 'object' || structure === null) {
+    return allPaths;
+  }
+
+  Object.keys(structure).forEach(key => {
+    const newPath = currentPath ? `${currentPath}/${key}` : key;
+    const value = structure[key];
+
+    if (typeof value === 'object' && value !== null) {
+      // It's a directory. Add its path and recurse.
+      // Ensure it's not a hidden directory and is part of 'src' or a common top-level dir
+      if (!key.startsWith('.') && (newPath.startsWith('src') || !newPath.includes('/'))) {
+         if (!allPaths.some(p => p.value === newPath)) {
+            allPaths.push({ value: newPath, label: newPath });
+        }
+      }
+      extractAllDirectoryPaths(value, newPath, allPaths);
+    }
+    // We are only interested in directories, so we don't process files here
   });
   return allPaths;
 };
@@ -75,6 +101,7 @@ const EstilosIAPromptGeneratorPage: FC = () => {
   });
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
   const [filePaths, setFilePaths] = useState<ComboboxOption[]>([]);
+  const [directoryOptions, setDirectoryOptions] = useState<ComboboxOption[]>([]); // New state for directory options
   const [isLoadingPaths, setIsLoadingPaths] = useState<boolean>(true);
   const { toast } = useToast();
 
@@ -82,16 +109,24 @@ const EstilosIAPromptGeneratorPage: FC = () => {
     const fetchAndProcessStructure = async () => {
       setIsLoadingPaths(true);
       try {
-        const response = await fetch('/estructura_proyecto.json'); // Assuming EstilosIA project structure is described here
+        const response = await fetch('/estructura_proyecto.json'); 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const structure = await response.json();
+
         const extractedFiles = extractAllFilePaths(structure).sort((a, b) => a.label.localeCompare(b.label));
         setFilePaths(extractedFiles);
+
+        const extractedDirs = extractAllDirectoryPaths(structure, '', []).sort((a,b) => a.label.localeCompare(b.label));
+        // Filter to ensure only relevant directories (e.g., under src) are shown, or adjust logic as needed
+        setDirectoryOptions(extractedDirs.filter(dir => dir.value.startsWith('src')));
+
+
       } catch (error) {
         console.error("Failed to fetch or process project structure for EstilosIA:", error);
         setFilePaths([]);
+        setDirectoryOptions([]);
         toast({
           title: 'Error',
           description: 'Failed to load project structure for EstilosIA. Please check console.',
@@ -120,6 +155,11 @@ const EstilosIAPromptGeneratorPage: FC = () => {
   const handleIntegrationFileChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, integrationFile: value }));
   }, []);
+
+  const handleBaseDirectoryChange = useCallback((value: string) => {
+    setFormData((prev) => ({ ...prev, baseDirectory: value }));
+  }, []);
+
 
   const isNewFileRequest = (type: string) => {
     return ['Nueva Página', 'Nuevo Componente'].includes(type);
@@ -248,12 +288,16 @@ const EstilosIAPromptGeneratorPage: FC = () => {
             {isNewFileRequest(formData.requestType) && (
               <div className="space-y-2">
                 <Label htmlFor="baseDirectory">3. Directorio Base (para nuevos archivos)</Label>
-                <Input
-                  id="baseDirectory"
-                  name="baseDirectory"
-                  placeholder="e.g., src/app/perfil/, src/components/user/"
+                <Combobox
+                  options={directoryOptions}
                   value={formData.baseDirectory}
-                  onChange={handleInputChange}
+                  onChange={handleBaseDirectoryChange}
+                  placeholder={isLoadingPaths ? "Cargando directorios..." : "Seleccionar directorio base..."}
+                  searchPlaceholder="Buscar directorio..."
+                  emptyPlaceholder="Directorio no encontrado."
+                  disabled={isLoadingPaths}
+                  triggerClassName="w-full"
+                  contentClassName="w-[--radix-popover-trigger-width]"
                 />
                  <p className="text-xs text-muted-foreground pt-1">
                     Ej: src/app/nueva-ruta/, src/components/nuevos/
@@ -382,5 +426,3 @@ const EstilosIAPromptGeneratorPage: FC = () => {
 };
 
 export default EstilosIAPromptGeneratorPage;
-
-    
